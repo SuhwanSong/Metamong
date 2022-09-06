@@ -60,7 +60,7 @@ MILESTONE = {
 
 
 class IOQueue:
-    def __init__(self, testcases: list, revision_range: list, oracle_ver: int) -> None:
+    def __init__(self, testcases: list, browser_type: str, revision_range: list) -> None:
 
         self.__build_lock = Lock()
         self.__queue_lock = Lock()
@@ -78,9 +78,10 @@ class IOQueue:
         self.version_list = {}
         self.monitor = defaultdict(float)
 
+        self.browser_type = browser_type
         self.revlist = revision_range
 
-        vers = (self.revlist[0], self.revlist[-1], oracle_ver)
+        vers = (self.revlist[0], self.revlist[-1])
         for testcase in testcases:
             self.insert_to_queue(vers, testcase, ())
 
@@ -117,10 +118,10 @@ class IOQueue:
         return key
 
 
-    def insert_to_queue(self, vers: Tuple[int, int, int], html_file: str, hashes: tuple) -> None:
+    def insert_to_queue(self, vers: Tuple[int, int, int], html_file: str, muts: list) -> None:
         with acquire_timeout(self.__queue_lock, -1) as acquired:
             if not acquired: return 
-            value = [html_file, hashes]
+            value = [html_file, muts]
             self.__preqs[vers].put(value)
             self.num_of_inputs += 1
 
@@ -152,10 +153,10 @@ class IOQueue:
             vers = self.__vers
             return vers
 
-    def update_postq(self, vers: Tuple[int, int, int], html_file: str, hashes: tuple) -> None:
+    def update_postq(self, vers: Tuple[int, int, int], html_file: str, muts: list) -> None:
         with acquire_timeout(self.__queue_lock, 1000) as acquired:
             if not acquired: return 
-            self.__postqs[vers].put((html_file, hashes))
+            self.__postqs[vers].put((html_file, muts))
             self.num_of_outputs += 1
             if self.num_of_outputs % 20 == 0:
                 tt = round((time.time() - self.start_time) / 60, 3)
@@ -183,11 +184,13 @@ class IOQueue:
                 q = self.__preqs[vers]
                 length = len(list(q.queue))
                 for _ in range(length):
-                    html_file, hashes = q.get()
+                    html_file, muts = q.get()
                     name = basename(html_file)
                     new_html_file = join(dir_path, name)
                     copyfile(html_file, new_html_file)
-                    q.put((new_html_file, hashes))
+                    new_js_file = join(dir_path, name.replace('.html', '.js'))
+                    FileManager.write_file(new_js_file, '\n'.join(muts))
+                    q.put((new_html_file, muts))
     
 
     def dump_queue_as_csv(self, path):
@@ -202,7 +205,7 @@ class IOQueue:
                 for key in keys:
                     q = self.__preqs[key]
                     for value in sorted(list(q.queue)):
-                        html_file, hashes = value
+                        html_file, muts = value
                         base, target, ref = key
                         csvfile.write(f'{base}, {target}, {ref}, {html_file}\n')
 
@@ -221,11 +224,11 @@ class IOQueue:
                 url = f'https://chromium.googlesource.com/chromium/src/+log/{commit_a}..{commit_b}'
                 FileManager.write_file(join(cur_path, 'changelog.txt'), url)
                 for _ in range(length):
-                    html_file, hashes = q.get()
+                    html_file, muts = q.get()
                     name = basename(html_file)
                     new_html_file = join(cur_path, name)
                     copyfile(html_file, new_html_file)
-                    q.put((new_html_file, hashes))
+                    q.put((new_html_file, muts))
 
     def set_version_list(self, html_file, build) -> None:
         with acquire_timeout(self.__queue_lock, 1000) as acquired:

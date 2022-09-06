@@ -13,6 +13,8 @@ from os.path import dirname, join, abspath, splitext, exists
 from chrome_binary import ChromeBinary
 from firefox_binary import FirefoxBinary
 
+from mutater import MetaMut
+
 GET_ATTRNAMES="""
 let attrs = [];
 const elements = document.body.querySelectorAll('*');
@@ -22,12 +24,14 @@ for (var i = 0; i < elements.length; i++) {
 return attrs;
 """
 
+GET_PAGE="""return window.SC.get_page();"""
+
 class Browser:
     def __init__(self, browser_type: str, commit_version: int, flags: str = '') -> None:
         environ["DBUS_SESSION_BUS_ADDRESS"] = '/dev/null'
 
         self.__width = 800
-        self.__height = 300
+        self.__height = 600
 
         browser_types = ['chrome', 'firefox']
         if browser_type not in browser_types:
@@ -43,6 +47,43 @@ class Browser:
         if flags:
             for flag in flags.split(' '):
                 self.flags.append(flag)
+
+    def __set_viewport_size(self):
+        window_size = self.browser.execute_script("""
+        return [window.outerWidth - window.innerWidth + arguments[0],
+          window.outerHeight - window.innerHeight + arguments[1]];
+        """, self.__width, self.__height)
+        self.browser.set_window_size(*window_size)
+
+    # Due to https://github.com/mozilla/geckodriver/issues/1744, setting the
+    # width/height of firefox includes some browser UI. This workaround is
+    # needed to resize the browser contents so screenshots are the appropriate
+    # size, rather than [height] - [ui height].
+    def __adjust_viewport_size(self):
+        width, height = self.exec_script('return [window.innerWidth, window.innerHeight]')
+        self.browser.set_window_size(
+                self.__width + (self.__width - width),
+                self.__height + (self.__height - height))
+
+    def __screenshot_and_hash(self, name=None):
+        png = self.get_screenshot()
+        if name:
+            ImageDiff.save_image(name, png)
+        pixels = ImageDiff.get_phash(png)
+        return pixels
+
+    def __repeatly_run(self, html_file):
+        for attempt in range(5):
+            if attempt == 4:
+                self.kill_browser()
+                self.setup_browser()
+            try:
+                self.browser.get('file://' + abspath(html_file))
+                return
+            except Exception as e:
+                continue
+
+        return None
 
     def setup_browser(self):
         self.__num_of_run = 0
@@ -122,44 +163,6 @@ class Browser:
 
         return True
 
-
-    def __set_viewport_size(self):
-        window_size = self.browser.execute_script("""
-        return [window.outerWidth - window.innerWidth + arguments[0],
-          window.outerHeight - window.innerHeight + arguments[1]];
-        """, self.__width, self.__height)
-        self.browser.set_window_size(*window_size)
-
-    # Due to https://github.com/mozilla/geckodriver/issues/1744, setting the
-    # width/height of firefox includes some browser UI. This workaround is
-    # needed to resize the browser contents so screenshots are the appropriate
-    # size, rather than [height] - [ui height].
-    def __adjust_viewport_size(self):
-        width, height = self.exec_script('return [window.innerWidth, window.innerHeight]')
-        self.browser.set_window_size(
-                self.__width + (self.__width - width),
-                self.__height + (self.__height - height))
-
-    def get_screenshot(self):
-        for attempt in range(5):
-            if attempt == 4:
-                self.kill_browser()
-                self.setup_browser()
-            try:
-                png = self.browser.get_screenshot_as_png()
-                return png
-            except Exception as e:
-                continue
-
-        return None
-
-    def __screenshot_and_hash(self, name=None):
-        png = self.get_screenshot()
-        if name:
-            ImageDiff.save_image(name, png)
-        pixels = ImageDiff.get_phash(png)
-        return pixels
-
     def kill_browser(self):
         if self.browser and self.browser.session_id:
             try:
@@ -194,29 +197,29 @@ class Browser:
         except Exception as e:
             return None
 
-    def repeatly_run(self, html_file):
-        for attempt in range(5):
-            if attempt == 4:
-                self.kill_browser()
-                self.setup_browser()
-            try:
-                self.browser.get('file://' + abspath(html_file))
-                return
-            except Exception as e:
-                continue
-
-        return None
-
     def run_html(self, html_file: str):
         if self.__num_of_run == 1000:
             self.kill_browser()
             self.setup_browser()
-        self.repeatly_run(html_file)
+        self.__repeatly_run(html_file)
         self.__num_of_run += 1
         return True
 
     def clean_html(self):
         self.browser.get('about:blank')
+
+    def get_screenshot(self):
+        for attempt in range(5):
+            if attempt == 4:
+                self.kill_browser()
+                self.setup_browser()
+            try:
+                png = self.browser.get_screenshot_as_png()
+                return png
+            except Exception as e:
+                continue
+
+        return None
 
     def get_hash_from_html(self, html_file, save_shot: bool = False):
         ret = self.run_html(html_file)
@@ -227,6 +230,54 @@ class Browser:
         hash_v = self.__screenshot_and_hash(screenshot_name)
         return hash_v
 
-
     def get_dom_tree_info(self):
         return self.exec_script(GET_ATTRNAMES)
+
+    def analyze_html(self, html_file):
+        dic = {}
+        scripts = {'ids': 'return get_all_ids();',
+                   'attributes': 'return get_all_attributes();',
+                   'css_length': 'return get_css_length();',
+        }
+
+        for key in scripts:
+            dic[key] = self.exec_script(scripts[key])
+            if not dic[key]: return {}
+        return dic
+
+    def __save_state(self):
+        self.exec_script("window.SC = new window.StateChecker();")
+
+    def __re_render(self):
+        self.exec_script("window.SC.write_document();")
+
+    def __is_same_state(self):
+        return self.exec_script("return window.SC.is_same_state();")
+
+    def metamor_test(self, html_file, muts, save_shot=False):
+        if not self.run_html(html_file): return
+
+        if not muts:
+            meta_mut = MetaMut()
+            dic = self.analyze_html(html_file)
+            meta_mut.load_state(dic)
+            muts.extend(meta_mut.generate())
+
+        for mut in muts: self.exec_script(mut)
+
+        # TODO: stop all animation and save all stateus
+        self.__save_state()
+
+        name_noext = splitext(html_file)[0]
+        screenshot_name = f'{name_noext}_{self.version}_a.png' if save_shot else None
+        hash_v1 = self.__screenshot_and_hash(screenshot_name)
+        if not hash_v1: return
+
+        self.__re_render()
+        if not self.__is_same_state(): return
+
+        screenshot_name = f'{name_noext}_{self.version}_b.png' if save_shot else None
+        hash_v2 = self.__screenshot_and_hash(screenshot_name)
+        if not hash_v2: return
+
+        return ImageDiff.diff_images(hash_v1, hash_v2)
