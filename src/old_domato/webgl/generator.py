@@ -27,8 +27,8 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
 from grammar import Grammar
 
-_N_MAIN_LINES = 1000
-_N_EVENTHANDLER_LINES = 500
+_N_MAIN_LINES = 100
+_N_EVENTHANDLER_LINES = 1
 
 def generate_function_body(jsgrammar, num_lines):
     js = ''
@@ -51,14 +51,14 @@ def GenerateNewSample(template, jsgrammar):
 
     result = template
     handlers = False
-    while '<canvasfuzz>' in result:
+    while '<glfuzz>' in result:
         numlines = _N_MAIN_LINES
         if handlers:
             numlines = _N_EVENTHANDLER_LINES
         else:
             handlers = True
         result = result.replace(
-            '<canvasfuzz>',
+            '<glfuzz>',
             generate_function_body(jsgrammar, numlines),
             1
         )
@@ -79,12 +79,13 @@ def generate_samples(grammar_dir, outfiles):
     f.close()
 
     jsgrammar = Grammar()
-    err = jsgrammar.parse_from_file(os.path.join(grammar_dir, 'canvas.txt'))
+    err = jsgrammar.parse_from_file(os.path.join(grammar_dir, 'webgl.txt'))
     if err > 0:
         print('There were errors parsing grammar')
         return
 
     for outfile in outfiles:
+        
         result = GenerateNewSample(template, jsgrammar)
 
         if result is not None:

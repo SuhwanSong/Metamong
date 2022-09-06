@@ -27,8 +27,8 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
 from grammar import Grammar
 
-_N_MAIN_LINES = 1000
-_N_EVENTHANDLER_LINES = 500
+_N_MAIN_LINES = 30
+_N_EVENTHANDLER_LINES = 0
 
 def generate_function_body(jsgrammar, num_lines):
     js = ''

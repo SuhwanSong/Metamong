@@ -110,10 +110,10 @@ class Grammar(object):
 
         self._line_guard = ''
 
-        self._recursion_max = 50
-        self._var_reuse_prob = 0.75
-        self._interesting_line_prob = 0.9
-        self._max_vars_of_same_type = 5
+        self._recursion_max = 40 # 50
+        self._var_reuse_prob = 0.75 # 0.75
+        self._interesting_line_prob = 0.5 #0.9
+        self._max_vars_of_same_type = 3 # 5
 
         self._inheritance = {}
 
@@ -416,13 +416,14 @@ class Grammar(object):
             recursion_depth,
             force_nonrecursive
         )
-        return self._expand_rule(
+        tmpp =  self._expand_rule(
             symbol,
             creator,
             context,
             recursion_depth,
             force_nonrecursive
         )
+        return tmpp
 
     def _expand_rule(self, symbol, rule, context,
                      recursion_depth, force_nonrecursive):
@@ -490,8 +491,6 @@ class Grammar(object):
                     context,
                     ''
                 )
-            elif (part['tagname'] == 'any') and 'variables' in context:
-                expanded = self._get_any_var(context);
             else:
                 try:
                     expanded = self._generate(
@@ -932,7 +931,8 @@ class Grammar(object):
 
     def _include_from_file(self, filename):
         try:
-            f = open(os.path.join(self._definitions_dir,
+            f = open(os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
                 filename
             ))
             content = f.read()
@@ -940,6 +940,7 @@ class Grammar(object):
         except IOError:
             print('Error reading ' + filename)
             return 1
+        self._definitions_dir = os.path.dirname(filename)
         return self.parse_from_string(content)
 
     def parse_from_string(self, grammar_str):
@@ -1026,8 +1027,3 @@ class Grammar(object):
             for parent_type in self._inheritance[var_type]:
                 ret += self._get_variable_setters(var_name, parent_type)
         return ret
-
-    def _get_any_var(self, context):
-        var_type = random.choice(list(context['variables'].keys()))
-        return random.choice(context['variables'][var_type])
-
