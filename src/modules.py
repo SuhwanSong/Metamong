@@ -42,20 +42,22 @@ class CrossVersion(Thread):
     def get_newer_browser(self) -> Browser:
         return self.br_list[-1] if self.br_list else None
 
-    def start_browsers(self, vers: Tuple[int, int, int]) -> bool:
+    def start_browsers(self, vers: Tuple[int, int]) -> bool:
         self.stop_browsers()
 
         bt = self.__btype
         if bt == 'chrome':
-            self.helper.download_chrome(vers[0])
-            self.helper.download_chrome(vers[1])
+            for ver in vers:
+                self.helper.download_chrome(ver)
         elif bt == 'firefox':
-            # TODO
-            pass
+            for ver in vers:
+                self.helper.build_firefox(ver)
+        else:
+            raise ValueError('Unsupported browser type')
 
+        for ver in vers:
+            self.br_list.append(Browser(bt, ver))
 
-        self.br_list.append(Browser(bt, vers[0]))
-        self.br_list.append(Browser(bt, vers[1]))
         for br in self.br_list:
             if not br.setup_browser():
                 return False
@@ -125,7 +127,7 @@ class Bisecter(Thread):
     def __init__(self, helper: IOQueue, browser_type: str) -> None:
         super().__init__()
         self.helper = helper
-        self.browser_type = browser_type
+        self.__btype = browser_type
 
         self.ref_br = None
         self.saveshot = False
@@ -135,7 +137,15 @@ class Bisecter(Thread):
 
     def start_ref_browser(self, ver: int) -> bool:
         self.stop_ref_browser()
-        self.helper.download_chrome(ver)
+
+        bt = self.__btype
+        if bt == 'chrome':
+            self.helper.download_chrome(ver)
+        elif bt == 'firefox':
+            self.helper.build_firefox(ver)
+        else:
+            raise ValueError('Unsupported browser type')
+
         self.ref_br = Browser('chrome', ver)
         return self.ref_br.setup_browser()
 
@@ -144,7 +154,7 @@ class Bisecter(Thread):
             self.ref_br.kill_browser()
             self.ref_br = None
 
-    def get_chrome(self, ver: int) -> None:
+    def get_browser(self, ver: int) -> None:
         pass
 
     def get_pixel_from_html(self, html_file):
@@ -182,7 +192,7 @@ class Bisecter(Thread):
             self.cur_mid = mid
             if cur_mid != mid:
                 cur_mid = mid
-                self.get_chrome(cur_mid)
+                self.get_browser(cur_mid)
                 if not self.start_ref_browser(cur_mid):
                     continue
 
@@ -240,7 +250,7 @@ class BisecterBuild(Bisecter):
 
         self.build = True
 
-    def get_chrome(self, ver: int) -> None:
+    def get_browser(self, ver: int) -> None:
         self.helper.build_chrome(ver)
 
 
