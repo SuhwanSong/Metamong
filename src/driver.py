@@ -260,6 +260,7 @@ class Browser:
         if not muts:
             meta_mut = MetaMut()
             dic = self.analyze_html(html_file)
+            if not dic: return
             meta_mut.load_state(dic)
             muts.extend(meta_mut.generate())
 

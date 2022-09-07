@@ -138,3 +138,5 @@ testenv/
 
 bisect-builds-cache.csv
 tools/
+freedom/
+seeds/

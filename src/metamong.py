@@ -2,7 +2,7 @@ import argparse
 
 from random import seed
 
-from modules import Preprocesser
+from modules import Metamong
 
 from os.path import join, dirname, basename
 
@@ -18,8 +18,8 @@ def main():
 
     seed(0)
 
-    p = Preprocesser(args.input, args.output, args.job, args.type, args.pre, args.new)
-    p.process()
+    m = Metamong(args.input, args.output, args.job, args.type, args.pre, args.new)
+    m.process()
 
 
 

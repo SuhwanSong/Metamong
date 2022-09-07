@@ -27,11 +27,12 @@ from collections import defaultdict
 from multiprocessing import Process
 
 class CrossVersion(Thread):
-    def __init__(self, helper: IOQueue) -> None:
+    def __init__(self, helper: IOQueue, browser_type: str) -> None:
         super().__init__()
         self.br_list = []
 
         self.helper = helper
+        self.__btype = browser_type
         self.saveshot = False
 
 
@@ -43,10 +44,16 @@ class CrossVersion(Thread):
 
     def start_browsers(self, vers: Tuple[int, int, int]) -> bool:
         self.stop_browsers()
-        self.helper.download_chrome(vers[0])
-        self.helper.download_chrome(vers[1])
 
-        bt = self.helper.browser_type
+        bt = self.__btype
+        if bt == 'chrome':
+            self.helper.download_chrome(vers[0])
+            self.helper.download_chrome(vers[1])
+        elif bt == 'firefox':
+            # TODO
+            pass
+
+
         self.br_list.append(Browser(bt, vers[0]))
         self.br_list.append(Browser(bt, vers[1]))
         for br in self.br_list:
@@ -67,22 +74,22 @@ class CrossVersion(Thread):
         self.helper.delete_record(thread_id, br, html_file)
         return hashes
 
-#    def cross_version_test_html(self, html_file: str, muts: list) -> bool:
-#        img_hashes = []
-#
-#        thread_id = current_thread()
-#        br1, br2 = self.br_list
-#
-#        self.helper.record_current_test(thread_id, br1, html_file)
-#        hashes = br1.metamor_test(html_file, muts, self.saveshot)
-#        self.helper.delete_record(thread_id, br1, html_file)
-#        if hashes: return False
-#
-#        self.helper.record_current_test(thread_id, br2, html_file)
-#        hashes = br2.metamor_test(html_file, muts, self.saveshot)
-#        self.helper.delete_record(thread_id, br2, html_file)
-#
-#        return hashes
+    def cross_version_test_html(self, html_file: str, muts: list) -> bool:
+        img_hashes = []
+
+        thread_id = current_thread()
+        br1, br2 = self.br_list
+
+        self.helper.record_current_test(thread_id, br1, html_file)
+        is_bug= br1.metamor_test(html_file, muts, self.saveshot)
+        self.helper.delete_record(thread_id, br1, html_file)
+        if is_bug: return False
+
+        self.helper.record_current_test(thread_id, br2, html_file)
+        is_bug = br2.metamor_test(html_file, muts, self.saveshot)
+        self.helper.delete_record(thread_id, br2, html_file)
+
+        return is_bug
 
     def run(self) -> None:
         start = time.time()
@@ -103,17 +110,23 @@ class CrossVersion(Thread):
                     continue
 
             muts = []
-            if self.single_test_html(html_file, muts):
-                print (muts)
-                hpr.update_postq(vers, html_file, muts)
+            if not self.single_test_html(html_file, muts):
+                continue
+
+            if not self.cross_version_test_html(html_file, muts):
+                continue
+
+            hpr.update_postq(vers, html_file, muts)
 
         self.stop_browsers()
 
 
 class Bisecter(Thread):
-    def __init__(self, helper: IOQueue) -> None:
+    def __init__(self, helper: IOQueue, browser_type: str) -> None:
         super().__init__()
         self.helper = helper
+        self.browser_type = browser_type
+
         self.ref_br = None
         self.saveshot = False
         self.cur_mid = None
@@ -146,13 +159,13 @@ class Bisecter(Thread):
             if not popped: break
 
             result, vers = popped
-            html_file, hashes = result
-            if len(hashes) != 2:
-                raise ValueError('Something wrong in hashes...')
+            html_file, muts = result
+            if len(muts) == 0:
+                raise ValueError('Something wrong in muts...')
 
             hpr.set_version_list(html_file, self.build)
 
-            start, end, ref = vers
+            start, end = vers
             if start >= end:
                 print (html_file, 'start and end are the same;')
                 continue
@@ -161,7 +174,7 @@ class Bisecter(Thread):
             end_idx = hpr.convert_to_index(html_file, end)
 
             if start_idx + 1 == end_idx:
-                hpr.update_postq(vers, html_file, hashes)
+                hpr.update_postq(vers, html_file, muts)
                 continue
 
             mid_idx = (start_idx + end_idx) // 2
@@ -173,28 +186,27 @@ class Bisecter(Thread):
                 if not self.start_ref_browser(cur_mid):
                     continue
 
-            ref_hash = self.get_pixel_from_html(html_file)
-            if ref_hash is None:
+            is_bug = self.ref_br.metamor_test(html_file, muts)
+            if is_bug is None:
                 continue
 
-            elif not ImageDiff.diff_images(hashes[0], ref_hash):
+            elif not is_bug:
                 if mid_idx + 1 == end_idx:
-                    hpr.update_postq((mid, end, ref), html_file, hashes)
+                    hpr.update_postq((mid, end), html_file, muts)
                     #print (html_file, mid, end, 'postq 1')
                     continue
                 low = hpr.convert_to_ver(html_file, mid_idx)
                 high = end
 
-            elif not ImageDiff.diff_images(hashes[1], ref_hash):
+            else:
                 if mid_idx - 1 == start_idx:
-                    hpr.update_postq((start, mid, ref), html_file, hashes)
+                    hpr.update_postq((start, mid), html_file, muts)
                     #print (html_file, start, mid, 'postq 2')
                     continue
                 low = start
                 high = hpr.convert_to_ver(html_file, mid_idx)
-            else:
-                continue
-            hpr.insert_to_queue((low, high, ref), html_file, hashes)
+
+            hpr.insert_to_queue((low, high), html_file, muts)
 #            if ref_hash is None:
 #                hpr.pop_index_from_list(html_file, mid_idx)
 #                hpr.insert_to_queue((start, end, ref), html_file, hashes)
@@ -452,7 +464,7 @@ class Minimizer(CrossVersion):
         self.stop_browsers()
 
 
-class Preprocesser:
+class Metamong:
     def __init__(self, input_dir: str, output_dir: str, num_of_threads: int,
                  browser_type:str, base_version: int, target_version: int) -> None:
 
@@ -465,7 +477,8 @@ class Preprocesser:
 
         self.experiment_result = {}
         self.tester = [
-                CrossVersion,
+            CrossVersion,
+            Bisecter,
         ]
         self.report = [
         ]
@@ -479,7 +492,7 @@ class Preprocesser:
         start = time.time()
         threads = []
         for i in range(self.num_of_threads):
-            threads.append(test_class(self.ioq))
+            threads.append(test_class(self.ioq, self.browser_type))
             threads[-1].saveshot = report
 
         class_name = type(threads[-1]).__name__
@@ -513,7 +526,11 @@ class Preprocesser:
 
         self.vm = VersionManager()
         testcases = FileManager.get_all_files(self.in_dir, '.html')
-        rev_range = self.vm.get_rev_range(self.base_ver, self.target_ver)
+
+        if self.browser_type == 'chrome':
+            rev_range = self.vm.get_rev_range(self.base_ver, self.target_ver)
+        elif self.browser_type == 'firefox':
+            rev_range = list(range(self.base_ver, self.target_ver + 1))
 
 
         num_of_tests = len(testcases)
@@ -522,9 +539,9 @@ class Preprocesser:
 
         print (f'# of tests: {num_of_tests}, rev_a: {rev_a}, rev_b: {rev_b}')
 
-        self.ioq = IOQueue(testcases, self.browser_type, rev_range)
+        self.ioq = IOQueue(testcases, rev_range)
 
-        disp = Display(size=(1200, 800))
+        disp = Display(size=(1600, 1200))
         disp.start()
 
         for test in self.tester: 

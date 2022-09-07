@@ -55,12 +55,37 @@ MILESTONE = {
     101: 982481,
     102: 992738,
     103:1002911,
-    104:1006827
+    104:1012729,
+    105:1027018,
+    106:1036826,
 }
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+def printf(color, p):
+    bc = ''
+    if color == 'WARNING':
+        bc = bcolors.WARNING
+    elif color == 'GREEN':
+        bc = bcolors.OKGREEN
+    elif color == 'FAIL':
+        bc = bcolors.FAIL
+    else:
+        bc = bcolors.OKBLUE
+    print (f'{bc}{p}{bcolors.ENDC}')
 
 
 class IOQueue:
-    def __init__(self, testcases: list, browser_type: str, revision_range: list) -> None:
+    def __init__(self, testcases: list, revision_range: list) -> None:
 
         self.__build_lock = Lock()
         self.__queue_lock = Lock()
@@ -78,7 +103,6 @@ class IOQueue:
         self.version_list = {}
         self.monitor = defaultdict(float)
 
-        self.browser_type = browser_type
         self.revlist = revision_range
 
         vers = (self.revlist[0], self.revlist[-1])
@@ -110,6 +134,18 @@ class IOQueue:
             build_chrome_binary(commit_version)
             pass
         self.__build_lock.release()
+
+    def build_firefox(self, commit_version: int) -> None:
+        browser_type = 'firefox'
+        self.__build_lock.acquire()
+        parent_dir = FileManager.get_parent_dir(__file__)
+        browser_dir = join(parent_dir, browser_type)
+        browser_path = join(browser_dir, str(commit_version), browser_type)
+        if not exists(browser_path):
+            build_chrome_binary(commit_version)
+            pass
+        self.__build_lock.release()
+
 
 
     def __select_vers(self) -> Optional[Tuple[int, int, int]]:
@@ -145,6 +181,10 @@ class IOQueue:
                 self.__preqs.pop(vers)
                 self.__vers = self.__select_vers()
             self.num_of_tests += 1
+            if self.num_of_tests % 100 == 0:
+                tt = round((time.time() - self.start_time) / 60, 3)
+                ot = round(self.num_of_tests / tt, 3)
+                printf('BLUE', f'test: {self.num_of_tests}, outputs: {self.num_of_outputs}, time: {tt}, test / time: {ot}')
             return value, vers
 
     def get_vers(self) -> Optional[Tuple[int, int, int]]:
@@ -161,7 +201,7 @@ class IOQueue:
             if self.num_of_outputs % 20 == 0:
                 tt = round((time.time() - self.start_time) / 60, 3)
                 ot = round(self.num_of_tests / tt, 3)
-                print (f'test: {self.num_of_tests}, outputs: {self.num_of_outputs}, time: {tt}, test / time: {ot}')
+                printf('GREEN', f'test: {self.num_of_tests}, outputs: {self.num_of_outputs}, time: {tt}, test / time: {ot}')
 
     def move_to_preqs(self):
         with acquire_timeout(self.__queue_lock, 1000) as acquired:
@@ -283,7 +323,7 @@ class IOQueue:
                 br, t = self.monitor[cur_test]
                 if cur_time - t > 30:
                     brs.append(br)
-                    print (f'Chrome {cur_test[1]} in thread {cur_test[0]} is hanging ...', cur_test[2])
+                    printf ('WARNING', f'Chrome {cur_test[1]} in thread {cur_test[0]} is hanging ... {cur_test[2]}')
 
         for br in brs:
             br.kill_browser_by_pid()
