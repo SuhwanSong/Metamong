@@ -28,6 +28,8 @@ from svg_tags import _SVG_TYPES
 from html_tags import _HTML_TYPES
 from mathml_tags import _MATHML_TYPES
 
+from multiprocessing import Process
+
 
 _N_ADDITIONAL_HTMLVARS = 5
 
@@ -167,7 +169,7 @@ def get_argument_parser():
 
     return parser
 
-def main():
+def main(index):
 
     fuzzer_dir = os.path.dirname(__file__)
 
@@ -196,7 +198,7 @@ def main():
 
             outfiles = []
             for i in range(nsamples):
-                outfiles.append(os.path.join(out_dir, 'fuzz-' + str(i).zfill(5) + '.html'))
+                outfiles.append(os.path.join(out_dir, f'{index}-{str(i).zfill(7)}.html'))
             
             generate_samples(template, outfiles)
                 
@@ -206,5 +208,11 @@ def main():
 
 
 if __name__ == '__main__':
-    
-    main()
+    ps = []
+    for i in range(16):
+        p = Process(target=main, args=(i,))
+        p.start()
+
+        ps.append(p)
+    for p in ps:
+        p.join()

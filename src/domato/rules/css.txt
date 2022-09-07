@@ -96,10 +96,10 @@
 <fontfacedescriptor> = font-variant: <cssproperty_font-variant>
 
 <rules root=true> = <rule10><rule10><rule10><rule10><rule10>
-<rule10> = <rulenl><rulenl><rulenl><rulenl><rulenl><rulenl><rulenl><rulenl><rulenl><rulenl>
+<rule10> = <rulenl><rulenl><rulenl><rulenl><rulenl>
 <rulenl> = <rule><newline>
 
-<declaration> = <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>
+<declaration> = <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>
 
 <declaration5> = <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>; <cssproperty>
 
