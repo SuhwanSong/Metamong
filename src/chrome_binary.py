@@ -107,8 +107,8 @@ class ChromeBinary:
             os.system(f'unzip -q {filename_path} -d {outdir}')
             tmp_outdir = os.path.join(outdir, self.__chrome_binary)
             tmp_driver_path = os.path.join(outdir, self.__chrome_driver_binary, self.__drivername)
-            os.rename(tmp_driver_path, os.path.join(tmp_outdir, self.__drivername))
-            os.rename(tmp_outdir, os.path.join(path, revision))
+            shutil.move(tmp_driver_path, os.path.join(tmp_outdir, self.__drivername))
+            shutil.move(tmp_outdir, os.path.join(path, revision))
         return True
 
     def get_browser_path(self, path, revision):

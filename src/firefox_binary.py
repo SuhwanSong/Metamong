@@ -117,10 +117,10 @@ class FirefoxBinary:
                 raise ValueError("Failed to download geckodriver at " + url)
             unzip_driver(os.path.join(outdir, filename), outdir)
             firefox_tmpdir = os.path.join(outdir, self.__firefox_dirpath)
-            os.rename(os.path.join(outdir, self.__drivername),
+            shutil.move(os.path.join(outdir, self.__drivername),
                       os.path.join(firefox_tmpdir, self.__drivername))
 
-            os.rename(firefox_tmpdir, os.path.join(path, version))
+            shutil.move(firefox_tmpdir, os.path.join(path, version))
 
     def get_browser_path(self, path, version):
         return os.path.join(path, str(version), self.__firefox_filepath)
