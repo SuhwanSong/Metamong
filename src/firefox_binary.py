@@ -10,18 +10,14 @@ from pathlib import Path
 
 def build_firefox_binary(revision):
     revision = str(revision)
-    if not os.path.exists(revision):
-        try:
-            cur_path = os.path.dirname(os.path.abspath(__file__))
-            br_build = os.path.join(cur_path, 'build_firefox.sh')
-            if commit != 0:
-                command = f'{br_build} {revision}'
-                print (command)
-                ret = os.system(command)
-        except Exception as e:
-            print("exception", e)
-    else:
-        print("pass " + revision)
+    cur_path = os.path.dirname(os.path.abspath(__file__))
+    dir_path = os.path.dirname(cur_path)
+    if os.path.exists(os.path.join(dir_path, 'firefox', revision)): return True
+    br_build = os.path.join(cur_path, 'build_firefox.sh')
+    command = f'{br_build} {revision}'
+    print (command)
+    ret = os.system(command)
+    return True if ret == 0 else False
 
 
 class FirefoxBinary:

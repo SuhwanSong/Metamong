@@ -11,6 +11,7 @@ from typing import Optional, Tuple
 from shutil import copyfile
 from collections import defaultdict
 
+from firefox_binary import build_firefox_binary
 from chrome_binary import build_chrome_binary
 from chrome_binary import get_commit_from_position
 
@@ -132,7 +133,6 @@ class IOQueue:
         browser_path = join(browser_dir, str(commit_version), browser_type)
         if not exists(browser_path):
             build_chrome_binary(commit_version)
-            pass
         self.__build_lock.release()
 
     def build_firefox(self, commit_version: int) -> None:
@@ -142,11 +142,8 @@ class IOQueue:
         browser_dir = join(parent_dir, browser_type)
         browser_path = join(browser_dir, str(commit_version), browser_type)
         if not exists(browser_path):
-            build_chrome_binary(commit_version)
-            pass
+            build_firefox_binary(commit_version)
         self.__build_lock.release()
-
-
 
     def __select_vers(self) -> Optional[Tuple[int, int, int]]:
         keys = list(self.__preqs.keys())
