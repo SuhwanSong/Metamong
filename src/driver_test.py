@@ -4,7 +4,7 @@ import unittest
 from helper import VersionManager
 from driver import Browser
 
-EXPECT_SIZE = [800, 300]
+EXPECT_SIZE = [800, 600]
 
 class TestDriver(unittest.TestCase):
     def test_viewport_of_chrome(self):

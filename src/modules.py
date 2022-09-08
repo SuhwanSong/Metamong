@@ -474,9 +474,10 @@ class Metamong:
         self.tester = [
             CrossVersion,
             Minimizer,
-            Bisecter,
+#            Bisecter,
         ]
         self.report = [
+            CrossVersion,
         ]
 
 
