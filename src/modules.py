@@ -26,6 +26,8 @@ from collections import defaultdict
 
 from multiprocessing import Process
 
+ITER=3
+
 class CrossVersion(Thread):
     def __init__(self, helper: IOQueue, browser_type: str) -> None:
         super().__init__()
@@ -37,6 +39,7 @@ class CrossVersion(Thread):
 
 
     def report_mode(self) -> None:
+        self.report_mode = True
         self.saveshot = True
 
     def get_newer_browser(self) -> Browser:
@@ -68,28 +71,33 @@ class CrossVersion(Thread):
             br.kill_browser()
         self.br_list.clear()
 
-    def single_test_html(self, html_file: str, muts: list):
+    def single_test_html(self, html_file: str, muts: list, nth: int = ITER):
         thread_id = current_thread()
         br = self.get_newer_browser()
-        self.helper.record_current_test(thread_id, br, html_file)
-        is_bug = br.metamor_test(html_file, muts, save_shot=self.saveshot)
-        self.helper.delete_record(thread_id, br, html_file)
-        return is_bug
+        for _ in range(nth):
+            self.helper.record_current_test(thread_id, br, html_file)
+            is_bug = br.metamor_test(html_file, muts, save_shot=self.saveshot)
+            self.helper.delete_record(thread_id, br, html_file)
+            if not is_bug: return False
 
-    def cross_version_test_html(self, html_file: str, muts: list) -> bool:
+        return True
+
+    def cross_version_test_html(self, html_file: str, muts: list, nth: int = ITER) -> bool:
         thread_id = current_thread()
         br1, br2 = self.br_list
 
-        self.helper.record_current_test(thread_id, br1, html_file)
-        is_bug = br1.metamor_test(html_file, muts, self.saveshot)
-        self.helper.delete_record(thread_id, br1, html_file)
-        if is_bug: return False
+        for _ in range(nth):
+            self.helper.record_current_test(thread_id, br1, html_file)
+            is_bug = br1.metamor_test(html_file, muts, self.saveshot)
+            self.helper.delete_record(thread_id, br1, html_file)
+            if is_bug: return False
 
-        self.helper.record_current_test(thread_id, br2, html_file)
-        is_bug = br2.metamor_test(html_file, muts, self.saveshot)
-        self.helper.delete_record(thread_id, br2, html_file)
+            self.helper.record_current_test(thread_id, br2, html_file)
+            is_bug = br2.metamor_test(html_file, muts, self.saveshot)
+            self.helper.delete_record(thread_id, br2, html_file)
+            if not is_bug: return False
 
-        return is_bug
+        return True
 
     def run(self) -> None:
         start = time.time()
@@ -102,14 +110,16 @@ class CrossVersion(Thread):
             if not popped: break
 
             result, vers = popped
-            html_file, _ = result
+            html_file, muts = result
 
             if cur_vers != vers:
                 cur_vers = vers
                 if not self.start_browsers(cur_vers):
                     continue
 
-            muts = []
+            if not self.report_mode:
+                muts.clear()
+
             if not self.single_test_html(html_file, muts):
                 continue
 

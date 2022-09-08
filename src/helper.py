@@ -108,7 +108,7 @@ class IOQueue:
 
         vers = (self.revlist[0], self.revlist[-1])
         for testcase in testcases:
-            self.insert_to_queue(vers, testcase, ())
+            self.insert_to_queue(vers, testcase, [])
 
         self.start_time = time.time()
 
