@@ -140,3 +140,7 @@ bisect-builds-cache.csv
 tools/
 freedom/
 seeds/
+outputs/
+
+*.swp
+*.swa
