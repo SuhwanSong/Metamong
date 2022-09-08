@@ -72,18 +72,16 @@ class CrossVersion(Thread):
         thread_id = current_thread()
         br = self.get_newer_browser()
         self.helper.record_current_test(thread_id, br, html_file)
-        hashes = br.metamor_test(html_file, muts, save_shot=self.saveshot)
+        is_bug = br.metamor_test(html_file, muts, save_shot=self.saveshot)
         self.helper.delete_record(thread_id, br, html_file)
-        return hashes
+        return is_bug
 
     def cross_version_test_html(self, html_file: str, muts: list) -> bool:
-        img_hashes = []
-
         thread_id = current_thread()
         br1, br2 = self.br_list
 
         self.helper.record_current_test(thread_id, br1, html_file)
-        is_bug= br1.metamor_test(html_file, muts, self.saveshot)
+        is_bug = br1.metamor_test(html_file, muts, self.saveshot)
         self.helper.delete_record(thread_id, br1, html_file)
         if is_bug: return False
 
@@ -157,8 +155,8 @@ class Bisecter(Thread):
     def get_browser(self, ver: int) -> None:
         pass
 
-    def get_pixel_from_html(self, html_file):
-        return self.ref_br.get_hash_from_html(html_file, self.saveshot)
+    def metamor_test(self, html_file: str, muts: list):
+        return self.ref_br.metamor_test(html_file, muts, self.saveshot)
 
     def run(self) -> None:
         cur_mid = None
@@ -196,7 +194,7 @@ class Bisecter(Thread):
                 if not self.start_ref_browser(cur_mid):
                     continue
 
-            is_bug = self.ref_br.metamor_test(html_file, muts)
+            is_bug = self.metamor_test(html_file, muts)
             if is_bug is None:
                 continue
 
@@ -244,31 +242,23 @@ class Bisecter(Thread):
         self.stop_ref_browser()
 
 
-class BisecterBuild(Bisecter):
-    def __init__(self, helper: IOQueue) -> None:
-        super().__init__(helper)
-
-        self.build = True
-
-    def get_browser(self, ver: int) -> None:
-        self.helper.build_chrome(ver)
-
-
 class Minimizer(CrossVersion):
-    def __init__(self, helper: IOQueue) -> None:
-        CrossVersion.__init__(self, helper)
+    def __init__(self, helper: IOQueue, browser_type: str) -> None:
+        CrossVersion.__init__(self, helper, browser_type)
 
         self.__min_html = None
         self.__html_file = None
         self.__temp_file = None
         self.__trim_file = None
 
+        self.__js_file = None
+
 
     def __remove_temp_files(self):
         os.remove(self.__temp_file)
         os.remove(self.__trim_file)
 
-    def __initial_test(self, html_file):
+    def __initial_test(self, html_file: str):
 
         self.__html_file = html_file
         self.__trim_file = join(dirname(html_file),
@@ -279,10 +269,11 @@ class Minimizer(CrossVersion):
         copyfile(html_file, self.__trim_file)
         copyfile(html_file, self.__temp_file)
 
-        self.__min_html = FileManager.read_file(html_file)
-        hashes = self.cross_version_test_html_nth(html_file, 0) 
-        return self.is_bug(hashes)
+        self.__js_file = html_file.replace('.html', '.js')
 
+        self.__min_html = FileManager.read_file(html_file)
+        self.__muts = FileManager.read_file(self.__js_file).split('\n')
+        return self.cross_version_test_html(html_file, self.__muts)
 
     def __minimize_sline(self, idx, style_lines):
         style_line = style_lines[idx]
@@ -324,8 +315,7 @@ class Minimizer(CrossVersion):
 
                 FileManager.write_file(self.__trim_file, tmp_html)
 
-                hashes = self.cross_version_test_html_nth(self.__trim_file, 0)
-                if self.is_bug(hashes):
+                if self.cross_version_test_html(self.__trim_file, self.__muts):
                     min_blocks = tmp_blocks
                     min_indices = tmp_indices
                     FileManager.write_file(self.__temp_file, tmp_html)
@@ -376,8 +366,7 @@ class Minimizer(CrossVersion):
             if not text: continue
             FileManager.write_file(self.__trim_file, text)
             br.clean_html()
-            hashes = self.cross_version_test_html_nth(self.__trim_file, 0) 
-            if self.is_bug(hashes):
+            if self.cross_version_test_html(self.__trim_file, self.__muts):
                 self.__min_html = text
                 FileManager.write_file(self.__temp_file, self.__min_html)
             else:
@@ -390,8 +379,7 @@ class Minimizer(CrossVersion):
                     if not text: continue
                     FileManager.write_file(self.__trim_file, text)
                     br.clean_html()
-                    hashes = self.cross_version_test_html_nth(self.__trim_file, 0) 
-                    if self.is_bug(hashes):
+                    if self.cross_version_test_html(self.__trim_file, self.__muts):
                         self.__min_html = text
                         FileManager.write_file(self.__temp_file, self.__min_html)
 
@@ -415,8 +403,7 @@ class Minimizer(CrossVersion):
             if not text: continue
             FileManager.write_file(self.__trim_file, text)
             br.clean_html()
-            hashes = self.cross_version_test_html_nth(self.__trim_file, 0) 
-            if self.is_bug(hashes):
+            if self.cross_version_test_html(self.__trim_file, self.__muts):
                 self.__min_html = text
                 FileManager.write_file(self.__temp_file, self.__min_html)
 
@@ -433,8 +420,7 @@ class Minimizer(CrossVersion):
             if not text: continue
             FileManager.write_file(self.__trim_file, text)
             br.clean_html()
-            hashes = self.cross_version_test_html_nth(self.__trim_file, 0) 
-            if self.is_bug(hashes):
+            if self.cross_version_test_html(self.__trim_file, self.__muts):
                 self.__min_html = text
                 FileManager.write_file(self.__temp_file, self.__min_html)
 
@@ -463,11 +449,10 @@ class Minimizer(CrossVersion):
             if self.__initial_test(html_file):
                 self.__minimizing()
   
-                hashes = self.cross_version_test_html_nth(self.__temp_file, 1)
-                if self.is_bug(hashes):
+                if self.cross_version_test_html(self.__temp_file, self.__muts):
                     min_html_file = os.path.splitext(html_file)[0] + '-min.html'
                     copyfile(self.__temp_file, min_html_file)
-                    hpr.update_postq(vers, min_html_file, hashes)
+                    hpr.update_postq(vers, min_html_file, self.__muts)
 
             self.__remove_temp_files()
 
@@ -488,6 +473,7 @@ class Metamong:
         self.experiment_result = {}
         self.tester = [
             CrossVersion,
+            Minimizer,
             Bisecter,
         ]
         self.report = [
