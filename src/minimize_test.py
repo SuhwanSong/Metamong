@@ -11,40 +11,36 @@ from helper import VersionManager
 from modules import Minimizer
 
 class MinimizeTester(Minimizer):
-    def __init__(self, helper: IOQueue) -> None:
-        super().__init__(helper)
+    def __init__(self, helper: IOQueue, browser_type: str) -> None:
+        super().__init__(helper, browser_type)
 
         self.func = None
 
-    def cross_version_test_html_nth(self, html_file: str, nth: int = 0):
+    def cross_version_test_html(self, html_file: str, muts: list) -> bool:
         text = FileManager.read_file(html_file)
-        if self.func(text):
-            return [1,0]
-        else:
-            return [1,1]
+        ret = self.func(text)
+        return ret
 
 def minimize_(html, minimization_function):
-    try:
-        temp_output_dir = tempfile.mkdtemp()
+    with tempfile.TemporaryDirectory() as temp_output_dir:
         temp_input = os.path.join(temp_output_dir, 'input.html')
+        temp_input_js = os.path.join(temp_output_dir, 'input.js')
         temp_minimized = os.path.join(temp_output_dir, 'input-min.html')
 
         FileManager.write_file(temp_input, html)
+        FileManager.write_file(temp_input_js, '')
 
         vm = VersionManager()
         rev1 = vm.get_revision(90)
-        rev2 = vm.get_revision(91)
+        rev2 = vm.get_revision(90)
 
-        ioq = IOQueue([temp_input], [rev1, rev2], None)
-        mn = MinimizeTester(ioq)
+        ioq = IOQueue([temp_input], [rev1, rev2])
+        mn = MinimizeTester(ioq, 'chrome')
         mn.func = minimization_function
         mn.start()
         mn.join()
 
         html = FileManager.read_file(temp_minimized)
-
-    finally:
-        shutil.rmtree(temp_output_dir)
 
     html = html.replace('<html>','')
     html = html.replace('</html>','')
