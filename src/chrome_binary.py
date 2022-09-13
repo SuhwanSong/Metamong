@@ -93,7 +93,11 @@ class ChromeBinary:
             url = self.__get_chromium_binary_download_url(revision)
             filename = f'{revision}.zip'
             filename_path = os.path.join(outdir, filename)
-            ret = download(url, filename, outdir)
+            ret = False
+            for _ in range(5):
+                ret = download(url, filename, outdir)
+                if ret: break
+
             if not ret:
                 raise ValueError("Failed to download chrome binary at " + url)
             os.system(f'unzip -q {filename_path} -d {outdir}')
