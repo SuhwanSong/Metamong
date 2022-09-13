@@ -140,6 +140,7 @@ class Browser:
 
             except Exception as e:
                 print (e)
+                time.sleep(0.2)
                 continue
 
         # System crashes if fails to start browser.
@@ -265,6 +266,7 @@ class Browser:
             meta_mut.load_state(dic)
             muts.extend(meta_mut.generate())
 
+        if not self.run_html(html_file): return
         for mut in muts: self.exec_script(mut)
 
         # TODO: stop all animation and save all stateus
