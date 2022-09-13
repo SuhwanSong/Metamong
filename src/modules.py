@@ -447,7 +447,7 @@ class Minimizer(CrossVersion):
             if not popped: break
 
             result, vers = popped
-            html_file, _ = result
+            html_file, muts = result
 
             if cur_vers != vers:
                 cur_vers = vers
@@ -457,10 +457,10 @@ class Minimizer(CrossVersion):
             if self.__initial_test(html_file):
                 self.__minimizing()
   
-                if self.cross_version_test_html(self.__temp_file, self.__muts):
+                if self.cross_version_test_html(self.__temp_file, muts):
                     min_html_file = os.path.splitext(html_file)[0] + '-min.html'
                     copyfile(self.__temp_file, min_html_file)
-                    hpr.update_postq(vers, min_html_file, self.__muts)
+                    hpr.update_postq(vers, min_html_file, muts)
 
             self.__remove_temp_files()
 
