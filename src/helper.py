@@ -7,6 +7,7 @@ from queue import Queue
 from pathlib import Path
 from random import choice
 from threading import Lock
+from threading import Semaphore
 from typing import Optional, Tuple
 from shutil import copyfile
 from collections import defaultdict
@@ -88,8 +89,12 @@ def printf(color, p):
 class IOQueue:
     def __init__(self, testcases: list, revision_range: list) -> None:
 
-        self.__build_lock = Lock()
         self.__queue_lock = Lock()
+        self.__build_lock = Semaphore(1)
+
+        self.__download_sem = Semaphore(8)
+        self.__download_locks = {}
+
         self.__preqs = defaultdict(Queue)
         self.__postqs = defaultdict(Queue)
         self.__vers = None
@@ -105,6 +110,8 @@ class IOQueue:
         self.monitor = defaultdict(float)
 
         self.revlist = revision_range
+        for rev in self.revlist:
+            self.__download_locks[rev] = Lock()
 
         vers = (self.revlist[0], self.revlist[-1])
         for testcase in testcases:
@@ -119,13 +126,15 @@ class IOQueue:
             self.__queue_lock.release()
 
     def download_chrome(self, commit_version: int) -> None:
-        self.__queue_lock.acquire()
+        self.__download_sem.acquire()
         browser_type = 'chrome'
         parent_dir = FileManager.get_parent_dir(__file__)
         browser_dir = join(parent_dir, browser_type)
+        self.__download_locks[commit_version].acquire()
         cb = ChromeBinary()
         cb.ensure_chrome_binaries(browser_dir, commit_version)
-        self.__queue_lock.release()
+        self.__download_locks[commit_version].release()
+        self.__download_sem.release()
 
     def build_chrome(self, commit_version: int) -> None:
         browser_type = 'chrome'

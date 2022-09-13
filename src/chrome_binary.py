@@ -100,7 +100,11 @@ class ChromeBinary:
             url = self.__get_chromium_driver_download_url(revision)
             filename = f'{revision}-driver.zip'
             filename_path = os.path.join(outdir, filename)
-            ret = download(url, filename, outdir)
+            ret = False
+            for _ in range(5):
+                ret = download(url, filename, outdir)
+                if ret: break
+
             if not ret:
                 raise ValueError("Failed to download chromedriver binary at " + url)
 
