@@ -26,8 +26,6 @@ from collections import defaultdict
 
 from multiprocessing import Process
 
-ITER=3
-
 class CrossVersion(Thread):
     def __init__(self, helper: IOQueue, browser_type: str) -> None:
         super().__init__()
@@ -37,10 +35,13 @@ class CrossVersion(Thread):
         self.__btype = browser_type
         self.saveshot = False
 
+        self.iter_num = 3
+
 
     def report_mode(self) -> None:
         self.report_mode = True
         self.saveshot = True
+        self.iter_num = 1
 
     def get_newer_browser(self) -> Browser:
         return self.br_list[-1] if self.br_list else None
@@ -71,10 +72,10 @@ class CrossVersion(Thread):
             br.kill_browser()
         self.br_list.clear()
 
-    def single_test_html(self, html_file: str, muts: list, nth: int = ITER):
+    def single_test_html(self, html_file: str, muts: list):
         thread_id = current_thread()
         br = self.get_newer_browser()
-        for _ in range(nth):
+        for _ in range(self.iter_num):
             self.helper.record_current_test(thread_id, br, html_file)
             is_bug = br.metamor_test(html_file, muts, save_shot=self.saveshot)
             self.helper.delete_record(thread_id, br, html_file)
@@ -82,11 +83,11 @@ class CrossVersion(Thread):
 
         return True
 
-    def cross_version_test_html(self, html_file: str, muts: list, nth: int = ITER) -> bool:
+    def cross_version_test_html(self, html_file: str, muts: list) -> bool:
         thread_id = current_thread()
         br1, br2 = self.br_list
 
-        for _ in range(nth):
+        for _ in range(self.iter_num):
             self.helper.record_current_test(thread_id, br1, html_file)
             is_bug = br1.metamor_test(html_file, muts, self.saveshot)
             self.helper.delete_record(thread_id, br1, html_file)
@@ -484,7 +485,7 @@ class Metamong:
         self.tester = [
             CrossVersion,
             Minimizer,
-#            Bisecter,
+            Bisecter,
         ]
         self.report = [
             CrossVersion,
@@ -494,6 +495,8 @@ class Metamong:
     def skip_minimizer(self):
         self.tester.remove(Minimizer)
 
+    def skip_bisecter(self):
+        self.tester.remove(Bisecter)
 
     def test_wrapper(self, test_class: object, report: bool = False) -> None:
         start = time.time()

@@ -78,6 +78,7 @@ class Browser:
                 self.kill_browser()
                 self.setup_browser()
             try:
+                self.clean_html() 
                 self.browser.get('file://' + abspath(html_file))
                 return
             except Exception as e:
