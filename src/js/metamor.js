@@ -104,7 +104,7 @@ window.StateChecker = class StateChecker {
         for (let i = 0; i < anis.length; i++) {
             anis[i].pause();
         }
-        times = [];
+        let times = [];
         for (let i = 0; i < anis.length; i++) {
             let ani = anis[i];
             times.push(ani.currentTime);

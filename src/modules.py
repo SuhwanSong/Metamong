@@ -481,8 +481,8 @@ class Metamong:
         self.experiment_result = {}
         self.tester = [
             CrossVersion,
-            Minimizer,
             Bisecter,
+            Minimizer,
         ]
         self.report = [
             CrossVersion,
