@@ -118,9 +118,6 @@ class CrossVersion(Thread):
                 if not self.start_browsers(cur_vers):
                     continue
 
-            if not self.report_mode:
-                muts.clear()
-
             if not self.single_test_html(html_file, muts):
                 continue
 
