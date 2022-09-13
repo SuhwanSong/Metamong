@@ -116,3 +116,8 @@ class ChromeBinary:
 
     def get_driver_path(self, path, revision):
         return os.path.join(path, str(revision), self.__drivername)
+
+if __name__ == "__main__":
+    cb = ChromeBinary()
+    cb.ensure_chrome_binaries(sys.argv[1], sys.argv[2])
+
