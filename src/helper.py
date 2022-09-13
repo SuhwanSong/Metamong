@@ -109,7 +109,7 @@ class IOQueue:
         vers = (self.revlist[0], self.revlist[-1])
         for testcase in testcases:
             js = testcase.replace('.html', '.js')
-            muts = FileManager.read_file(js).split('\n') if exists(js_file) else []
+            muts = FileManager.read_file(js).split('\n') if exists(js) else []
             self.insert_to_queue(vers, testcase, muts)
 
         self.start_time = time.time()
