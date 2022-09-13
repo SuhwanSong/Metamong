@@ -72,15 +72,19 @@ class CrossVersion(Thread):
             br.kill_browser()
         self.br_list.clear()
 
-    def single_test_html(self, html_file: str, muts: list):
+    def __test_wrapper(self, br, html_file: str, muts: list):
         thread_id = current_thread()
+        self.helper.record_current_test(thread_id, br, html_file)
+        is_bug = br.metamor_test(html_file, muts, save_shot=self.saveshot)
+        self.helper.delete_record(thread_id, br, html_file)
+        return is_bug
+
+    def single_test_html(self, html_file: str, muts: list):
         br = self.get_newer_browser()
         for _ in range(self.iter_num):
-            self.helper.record_current_test(thread_id, br, html_file)
-            is_bug = br.metamor_test(html_file, muts, save_shot=self.saveshot)
-            self.helper.delete_record(thread_id, br, html_file)
+            is_bug = self.__test_wrapper(br, html_file, muts)
             if not is_bug: return False
-
+            if not muts: raise ValueError('muts is empty...')
         return True
 
     def cross_version_test_html(self, html_file: str, muts: list) -> bool:
@@ -88,17 +92,13 @@ class CrossVersion(Thread):
         br1, br2 = self.br_list
 
         for _ in range(self.iter_num):
-            self.helper.record_current_test(thread_id, br1, html_file)
-            is_bug = br1.metamor_test(html_file, muts, self.saveshot)
-            self.helper.delete_record(thread_id, br1, html_file)
-            if is_bug: return False
+            br1_bug = self.__test_wrapper(br1, html_file, muts)
+            if br1_bug is None: return
 
-            self.helper.record_current_test(thread_id, br2, html_file)
-            is_bug = br2.metamor_test(html_file, muts, self.saveshot)
-            self.helper.delete_record(thread_id, br2, html_file)
-            if not is_bug: return False
+            br2_bug = self.__test_wrapper(br2, html_file, muts)
+            if br2_bug is None: return
 
-        return True
+        return not br1_bug and br2_bug
 
     def run(self) -> None:
         start = time.time()
@@ -118,7 +118,7 @@ class CrossVersion(Thread):
                 if not self.start_browsers(cur_vers):
                     continue
 
-            if not self.single_test_html(html_file, muts):
+            if not self.report_mode and not self.single_test_html(html_file, muts):
                 continue
 
             if not self.cross_version_test_html(html_file, muts):
@@ -164,7 +164,15 @@ class Bisecter(Thread):
         pass
 
     def metamor_test(self, html_file: str, muts: list):
-        return self.ref_br.metamor_test(html_file, muts, self.saveshot)
+        thread_id = current_thread()
+        br = self.ref_br
+        for _ in range(3):
+            self.helper.record_current_test(thread_id, br, html_file)
+            is_bug = self.ref_br.metamor_test(html_file, muts, self.saveshot)
+            self.helper.delete_record(thread_id, br, html_file)
+            if is_bug is None: return
+
+        return is_bug
 
     def run(self) -> None:
         cur_mid = None

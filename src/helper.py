@@ -337,7 +337,7 @@ class IOQueue:
             br.kill_browser_by_pid()
 
 class FileManager:
-    def get_all_files(root, ext=None):
+    def get_all_files(root, ext=None) -> list:
         paths = []
         for path, subdirs, files in walk(root):
             for name in files:
