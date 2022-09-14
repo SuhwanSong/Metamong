@@ -19,7 +19,7 @@ def main():
     seed(0)
 
     m = Metamong(args.input, args.output, args.job, args.type, args.pre, args.new)
-    m.skip_minimizer()
+    #m.skip_minimizer()
     m.process()
 
 

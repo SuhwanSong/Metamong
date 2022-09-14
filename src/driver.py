@@ -265,7 +265,7 @@ class Browser:
             meta_mut.load_state(dic)
             muts.extend(meta_mut.generate())
 
-        if not self.run_html(html_file): return
+        #if not self.run_html(html_file): return
         for mut in muts: self.exec_script(mut)
 
         # TODO: stop all animation and save all stateus
