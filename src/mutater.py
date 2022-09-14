@@ -18,8 +18,6 @@ class MetaMut:
              self.del_node, # 100 / 100
              self.del_attribute, # 99 / 100
              self.del_css, # 98 / 100
-             self.meta_scroll,
-             self.meta_wscroll,
             ]
 
         self.mut_func.extend(low_weight_list * 1)
