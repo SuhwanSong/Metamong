@@ -72,17 +72,17 @@ class CrossVersion(Thread):
             br.kill_browser()
         self.br_list.clear()
 
-    def __test_wrapper(self, br, html_file: str, muts: list):
+    def __test_wrapper(self, br, html_file: str, muts: list, phash: bool = False):
         thread_id = current_thread()
         self.helper.record_current_test(thread_id, br, html_file)
-        is_bug = br.metamor_test(html_file, muts, save_shot=self.saveshot)
+        is_bug = br.metamor_test(html_file, muts, save_shot=self.saveshot, phash=phash)
         self.helper.delete_record(thread_id, br, html_file)
         return is_bug
 
-    def single_test_html(self, html_file: str, muts: list):
+    def single_test_html(self, html_file: str, muts: list, phash: bool = False):
         br = self.get_newer_browser()
         for _ in range(self.iter_num):
-            is_bug = self.__test_wrapper(br, html_file, muts)
+            is_bug = self.__test_wrapper(br, html_file, muts, phash=phash)
             if not is_bug: return False
             if not muts: raise ValueError('muts is empty...')
         return True
@@ -118,8 +118,12 @@ class CrossVersion(Thread):
                 if not self.start_browsers(cur_vers):
                     continue
 
-            if not self.report_mode and not self.single_test_html(html_file, muts):
-                continue
+            if not self.report_mode:
+                if not self.single_test_html(html_file, muts):
+                    continue
+
+                elif not self.single_test_html(html_file, muts, phash=True):
+                    continue
 
             if not self.cross_version_test_html(html_file, muts):
                 continue
