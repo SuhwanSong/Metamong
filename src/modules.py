@@ -94,6 +94,7 @@ class CrossVersion(Thread):
         for _ in range(self.iter_num):
             br1_bug = self.__test_wrapper(br1, html_file, muts)
             if br1_bug is None: return
+            elif br1_bug: return False
 
             br2_bug = self.__test_wrapper(br2, html_file, muts)
             if br2_bug is None: return
@@ -118,12 +119,8 @@ class CrossVersion(Thread):
                 if not self.start_browsers(cur_vers):
                     continue
 
-            if not self.report_mode:
-                if not self.single_test_html(html_file, muts):
-                    continue
-
-                elif not self.single_test_html(html_file, muts, phash=True):
-                    continue
+            if not self.report_mode and not self.single_test_html(html_file, muts, phash=True):
+                continue
 
             if not self.cross_version_test_html(html_file, muts):
                 continue
