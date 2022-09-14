@@ -65,12 +65,11 @@ class Browser:
                 self.__width + (self.__width - width),
                 self.__height + (self.__height - height))
 
-    def __screenshot_and_hash(self, name=None):
+    def __screenshot_and_hash(self, name=None, phash=False):
         png = self.get_screenshot()
         if name:
             ImageDiff.save_image(name, png)
-        pixels = ImageDiff.get_phash(png)
-        return pixels
+        return ImageDiff.get_hash(png) if not phash else ImageDiff.get_phash(png)
 
     def __repeatly_run(self, html_file):
         for attempt in range(5):
@@ -256,7 +255,7 @@ class Browser:
     def __is_same_state(self):
         return self.exec_script("return window.SC.is_same_state();")
 
-    def metamor_test(self, html_file, muts, save_shot=False):
+    def metamor_test(self, html_file, muts, save_shot=False, phash=False):
         if not self.run_html(html_file): return
         if not muts:
             meta_mut = MetaMut()
@@ -273,14 +272,14 @@ class Browser:
 
         name_noext = splitext(html_file)[0]
         screenshot_name = f'{name_noext}_{self.version}_a.png' if save_shot else None
-        hash_v1 = self.__screenshot_and_hash(screenshot_name)
+        hash_v1 = self.__screenshot_and_hash(screenshot_name, phash=phash)
         if not hash_v1: return
 
         self.__re_render()
         if not self.__is_same_state(): return
 
         screenshot_name = f'{name_noext}_{self.version}_b.png' if save_shot else None
-        hash_v2 = self.__screenshot_and_hash(screenshot_name)
+        hash_v2 = self.__screenshot_and_hash(screenshot_name, phash=phash)
         if not hash_v2: return
 
-        return ImageDiff.diff_images(hash_v1, hash_v2)
+        return ImageDiff.diff_images(hash_v1, hash_v2, phash=phash)

@@ -61,7 +61,7 @@ window.StateChecker = class StateChecker {
         this.css_rule = this.get_css_rules();
         this.focus_node = this.get_focus_node();
         this.scroll_positions = this.get_scroll_positions();
-        this.animations = this.get_animations();
+        //this.animations = this.get_animations();
 
         this.page_html = this.get_page();
     }

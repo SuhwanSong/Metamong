@@ -390,8 +390,9 @@ class VersionManager:
         return tmp
 
 import hashlib
+from imagehash import phash
 class ImageDiff:
-    def get_phash(png):
+    def get_hash(png):
         stream = png if isinstance(png, str) else BytesIO(png)
         try:
             with Image.open(stream, 'r') as image:
@@ -400,8 +401,19 @@ class ImageDiff:
         except Exception as e:
             print (e)
 
-    def diff_images(hash_A, hash_B):
-        return hash_A != hash_B
+    def get_phash(png):
+        stream = png if isinstance(png, str) else BytesIO(png)
+        try:
+            with Image.open(stream, 'r') as image:
+                return phash(image, hash_size=16)
+        except Exception as e:
+            print (e)
+
+    def diff_images(hash_A, hash_B, phash=False):
+        if phash:
+            return hash_A - hash_B >= 16
+        else:
+            return hash_A != hash_B
 
     def save_image(name, png):
         try:
