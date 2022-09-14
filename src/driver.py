@@ -257,15 +257,14 @@ class Browser:
 
     def metamor_test(self, html_file, muts, save_shot=False, phash=False):
         if not self.run_html(html_file): return
-
         if not muts:
             meta_mut = MetaMut()
             dic = self.analyze_html(html_file)
             if not dic: return
             meta_mut.load_state(dic)
             muts.extend(meta_mut.generate())
+            if not self.run_html(html_file): return
 
-        #if not self.run_html(html_file): return
         for mut in muts: self.exec_script(mut)
 
         # TODO: stop all animation and save all stateus

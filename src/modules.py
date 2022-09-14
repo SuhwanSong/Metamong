@@ -33,8 +33,9 @@ class CrossVersion(Thread):
 
         self.helper = helper
         self.__btype = browser_type
-        self.saveshot = False
 
+        self.report_mode = False
+        self.saveshot = False
         self.iter_num = 3
 
 
