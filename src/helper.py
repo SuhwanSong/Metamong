@@ -104,7 +104,7 @@ class IOQueue:
         self.num_of_outputs = 0
 
         limit = getenv('LIMIT')
-        self.limit = 1000 if not limit else int(limit)
+        self.limit = 100000 if not limit else int(limit)
 
         self.version_list = {}
         self.monitor = defaultdict(float)
@@ -276,6 +276,8 @@ class IOQueue:
                     name = basename(html_file)
                     new_html_file = join(cur_path, name)
                     copyfile(html_file, new_html_file)
+                    new_js_file = join(cur_path, name.replace('.html', '.js'))
+                    FileManager.write_file(new_js_file, '\n'.join(muts))
                     q.put((new_html_file, muts))
 
     def set_version_list(self, html_file, build) -> None:
