@@ -97,7 +97,7 @@ class CrossVersion(Thread):
             if br1_bug is None: return
             elif br1_bug: return False
 
-            br2_bug = self.__test_wrapper(br2, html_file, muts)
+            br2_bug = self.__test_wrapper(br2, html_file, muts, phash=True)
             if br2_bug is None: return
 
         return not br1_bug and br2_bug
@@ -468,9 +468,10 @@ class Minimizer(CrossVersion):
                 self.__minimizing()
   
                 if self.cross_version_test_html(self.__temp_file, muts):
-                    min_html_file = os.path.splitext(html_file)[0] + '-min.html'
-                    copyfile(self.__temp_file, min_html_file)
-                    hpr.update_postq(vers, min_html_file, muts)
+                    orig_html_file = os.path.splitext(html_file)[0] + '-orig.html'
+                    os.rename(html_file, orig_html_file) 
+                    copyfile(self.__temp_file, html_file)
+                    hpr.update_postq(vers, html_file, muts)
 
             self.__remove_temp_files()
 
