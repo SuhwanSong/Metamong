@@ -233,29 +233,6 @@ class Bisecter(Thread):
                 high = hpr.convert_to_ver(html_file, mid_idx)
 
             hpr.insert_to_queue((low, high), html_file, muts)
-#            if ref_hash is None:
-#                hpr.pop_index_from_list(html_file, mid_idx)
-#                hpr.insert_to_queue((start, end, ref), html_file, hashes)
-#                continue
-#
-#            elif not ImageDiff.diff_images(hashes[0], ref_hash):
-#                if mid_idx + 1 == end_idx:
-#                    hpr.update_postq((mid, end, ref), html_file, hashes)
-#                    #print (html_file, mid, end, 'postq 1')
-#                    continue
-#                low = hpr.convert_to_ver(html_file, mid_idx)
-#                high = end
-#
-#            else:
-#            #elif not ImageDiff.diff_images(hashes[1], ref_hash):
-#                if mid_idx - 1 == start_idx:
-#                    hpr.update_postq((start, mid, ref), html_file, hashes)
-#                    #print (html_file, start, mid, 'postq 2')
-#                    continue
-#                low = start
-#                high = hpr.convert_to_ver(html_file, mid_idx)
-#
-#            hpr.insert_to_queue((low, high, ref), html_file, hashes)
 
         self.stop_ref_browser()
 
@@ -442,11 +419,23 @@ class Minimizer(CrossVersion):
                 self.__min_html = text
                 FileManager.write_file(self.__temp_file, self.__min_html)
 
+    def __minimize_js(self):
+        muts = self.__muts.copy()
+        for i in reversed(range(len(muts))):
+            removed = muts.pop(i)
+            if self.cross_version_test_html(self.__temp_file, muts):
+                self.__muts.pop(i)
+                # print (f'{removed} is removed')
+            else:
+                muts.insert(i, removed)
+
+
     def __minimizing(self):
         self.__minimize_style()
         self.__minimize_dom()
         self.__minimize_text()
         self.__minimize_inner_element()
+        self.__minimize_js()
 
 
     def run(self) -> None:
@@ -467,11 +456,11 @@ class Minimizer(CrossVersion):
             if self.__initial_test(html_file):
                 self.__minimizing()
   
-                if self.cross_version_test_html(self.__temp_file, muts):
+                if self.cross_version_test_html(self.__temp_file, self.__muts):
                     orig_html_file = os.path.splitext(html_file)[0] + '-orig.html'
                     os.rename(html_file, orig_html_file) 
                     copyfile(self.__temp_file, html_file)
-                    hpr.update_postq(vers, html_file, muts)
+                    hpr.update_postq(vers, html_file, self.__muts)
 
             self.__remove_temp_files()
 
@@ -492,8 +481,8 @@ class Metamong:
         self.experiment_result = {}
         self.tester = [
             CrossVersion,
-            Bisecter,
             Minimizer,
+            Bisecter,
         ]
         self.report = [
             CrossVersion,

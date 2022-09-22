@@ -396,7 +396,7 @@ window.DelCSS = class DelCSS {
         } else {
             const sheet = document.styleSheets[0];
             const num_rules = sheet.rules.length;
-            if (!sheet || num_rules <= 1) {
+            if (!sheet || num_rules <= 0) {
                 this.mutable = false; 
             } else {
                 const pos = ruleidx % num_rules;
