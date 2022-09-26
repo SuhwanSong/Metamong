@@ -267,7 +267,7 @@ class Minimizer(CrossVersion):
         self.__js_file = html_file.replace('.html', '.js')
 
         self.__min_html = FileManager.read_file(html_file)
-        self.__muts = FileManager.read_file(self.__js_file).split('\n')
+        self.__muts = FileManager.read_js_file(self.__js_file)
         return self.cross_version_test_html(html_file, self.__muts)
 
     def __minimize_sline(self, idx, style_lines):
