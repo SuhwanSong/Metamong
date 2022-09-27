@@ -97,7 +97,9 @@ window.StateChecker = class StateChecker {
         let allElements = get_elements();
         for (let i = 0; i < allElements.length; i++) {
             let ele = allElements[i];
-            positions.push([ele.scrollTop, ele.scrollLeft]);
+            if (ele.id !== 'fit') {
+                positions.push([ele.scrollTop, ele.scrollLeft]);
+            }
         }
         return positions;
     }
@@ -174,7 +176,10 @@ window.StateChecker = class StateChecker {
     }
 
     is_focus_same() {
-        return this.compare_nodes(this.focus_node, document.activeElement);
+        let node = this.get_focus_node();
+        let fit = node.querySelector('#fit');
+        if (fit) { fit.remove(); }
+        return this.compare_nodes(this.focus_node, node);
     }
 
     is_scroll_position_same() {
