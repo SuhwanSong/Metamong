@@ -103,27 +103,30 @@ window.StateChecker = class StateChecker {
     }
 
     get_animations() {
-        let anis = document.getAnimations();
-        for (let i = 0; i < anis.length; i++) {
-            anis[i].pause();
-        }
-        let times = {};
-        for (let i = 0; i < anis.length; i++) {
-            let ani = anis[i];
-            let aniName = ani.animationName;
-            if (!(aniName in times)) {
-                times[aniName] = {};
-            }
-            times[aniName][ani.effect.target.id] = ani.currentTime;
-        }
-        return times;
+//        let anis = document.getAnimations();
+//        for (let i = 0; i < anis.length; i++) {
+//            anis[i].pause();
+//        }
+//        let times = {};
+//        for (let i = 0; i < anis.length; i++) {
+//            let ani = anis[i];
+//            let aniName = ani.animationName;
+//            if (!(aniName in times)) {
+//                times[aniName] = {};
+//            }
+//            times[aniName][ani.effect.target.id] = ani.currentTime;
+//        }
+//        return times;
+        return document.getAnimations().length;
     }
 
     cancel_animations() {
         let anis = document.getAnimations();
         for (let i = 0; i < anis.length; i++) {
             let ani = anis[i];
-            ani.cancel();        
+            if (Object.prototype.toString.call(ani) === "[object CSSAnimation]") {
+                ani.cancel();        
+            }
         }
     }
 
@@ -148,14 +151,7 @@ window.StateChecker = class StateChecker {
         for (let i = 0; i < anis.length; i++) {
             let ani = anis[i];
             ani.cancel();
-        //    ani.pause();
-        //    ani_dict[ani.animationName] = ani;
         }
-
-        //for (var key in window.SC.animations) {
-        //    let ani = ani_dict[key];
-        //    ani.currentTime = window.SC.animations[key];
-        //}
         </script>`
         return js;
     }
@@ -167,11 +163,10 @@ window.StateChecker = class StateChecker {
     }
 
     is_dom_same() {
-        let fit = document.getElementById('fit');
-        if (fit) {
-            fit.remove();
-        }
-        return this.compare_nodes(this.dom_tree, document.body);
+        let dom_tree = this.get_dom_tree();
+        dom_tree.querySelector('#fit').remove();
+ 
+        return this.compare_nodes(this.dom_tree, dom_tree);
     }
 
     is_css_same() {
@@ -194,16 +189,17 @@ window.StateChecker = class StateChecker {
     }
 
     is_animation_same() {
-        let anis = this.get_animations();
-        for (var key in this.animations) {
-            if (!(key in anis) || anis[key] != this.animations[key]) return false;
-        }
-        for (var key in anis) {
-            if (!(key in this.animations)) {
-                return false;
-            }
-        }
-        return true;
+//        let anis = this.get_animations();
+//        for (var key in this.animations) {
+//            if (!(key in anis) || anis[key] != this.animations[key]) return false;
+//        }
+//        for (var key in anis) {
+//            if (!(key in this.animations)) {
+//                return false;
+//            }
+//        }
+//        return true;
+        return this.animations == 0 && this.get_animations() == 0;
     }
 
     is_same_state() {
