@@ -276,11 +276,13 @@ class Browser:
         if not hash_v1: return
 
         self.__re_render()
-        if self.__is_same_state() == False:
+        if not self.__is_same_state():
             print ('state is different', html_file, muts)
             return
         else:
-            print ('state is same', html_file)
+            print ('state is same', html_file, muts)
+            pass
+            
 
         screenshot_name = f'{name_noext}_{self.version}_b.png' if save_shot else None
         hash_v2 = self.__screenshot_and_hash(screenshot_name, phash=phash)

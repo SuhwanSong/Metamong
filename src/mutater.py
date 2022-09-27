@@ -83,6 +83,8 @@ class MetaMut:
 
     def del_attribute(self):
         id_ = choice(self.ids)
+        if not self.attributes[id_]:
+            return ""
         attrn = choice(self.attributes[id_])
         return f"window.Mut = new window.DelAttribute('{id_}', '{attrn}');"
 

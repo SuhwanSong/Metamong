@@ -58,6 +58,7 @@ function get_attribute() {
 window.StateChecker = class StateChecker {
     constructor() {
         this.cancel_transitions();
+        this.cancel_animations();
 
         this.dom_tree = this.get_dom_tree();
         this.css_rule = this.get_css_rules();
@@ -109,9 +110,21 @@ window.StateChecker = class StateChecker {
         let times = {};
         for (let i = 0; i < anis.length; i++) {
             let ani = anis[i];
-            times[ani.animationName] = ani.currentTime;
+            let aniName = ani.animationName;
+            if (!(aniName in times)) {
+                times[aniName] = {};
+            }
+            times[aniName][ani.effect.target.id] = ani.currentTime;
         }
         return times;
+    }
+
+    cancel_animations() {
+        let anis = document.getAnimations();
+        for (let i = 0; i < anis.length; i++) {
+            let ani = anis[i];
+            ani.cancel();        
+        }
     }
 
     cancel_transitions() {
@@ -125,7 +138,6 @@ window.StateChecker = class StateChecker {
     }
 
     fit_animations() {
-        
         let js = `<script id="fit">
         let foc = document.getElementById(window.SC.focus_node.id);
         if (foc) {
@@ -135,14 +147,15 @@ window.StateChecker = class StateChecker {
         let anis = document.getAnimations();
         for (let i = 0; i < anis.length; i++) {
             let ani = anis[i];
-            ani.pause();
-            ani_dict[ani.animationName] = ani;
+            ani.cancel();
+        //    ani.pause();
+        //    ani_dict[ani.animationName] = ani;
         }
 
-        for (var key in window.SC.animations) {
-            let ani = ani_dict[key];
-            ani.currentTime = window.SC.animations[key];
-        }
+        //for (var key in window.SC.animations) {
+        //    let ani = ani_dict[key];
+        //    ani.currentTime = window.SC.animations[key];
+        //}
         </script>`
         return js;
     }
