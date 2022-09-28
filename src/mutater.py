@@ -27,7 +27,7 @@ class MetaMut:
         self.mut_func.extend(high_weight_list * 3)
 
         self.min_num = 1
-        self.max_num = 1
+        self.max_num = 8
 
     def save_state(self):
         return 'window.SC = new window.StateChecker();'
