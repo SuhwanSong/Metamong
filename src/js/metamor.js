@@ -57,11 +57,14 @@ function get_attribute() {
 /* rendering checker */
 window.StateChecker = class StateChecker {
     constructor() {
+        this.cancel_transitions();
+        this.cancel_animations();
+
         this.dom_tree = this.get_dom_tree();
-        this.css_rule = this.get_css_rules();
+        //this.css_rule = this.get_css_rules();
         this.focus_node = this.get_focus_node();
-        this.scroll_positions = this.get_scroll_positions();
-        //this.animations = this.get_animations();
+        this.scroll_positions = this.get_scroll_positions(this.dom_tree);
+        this.animations = this.get_animations();
 
         this.page_html = this.get_page();
     }
@@ -89,9 +92,8 @@ window.StateChecker = class StateChecker {
         return document.activeElement.cloneNode(true);
     }
 
-    get_scroll_positions() {
+    get_scroll_positions(allElements) {
         let positions = [[window.scrollX, window.scrollY]];
-        let allElements = get_elements();
         for (let i = 0; i < allElements.length; i++) {
             let ele = allElements[i];
             positions.push([ele.scrollTop, ele.scrollLeft]);
@@ -100,43 +102,120 @@ window.StateChecker = class StateChecker {
     }
 
     get_animations() {
+//        let anis = document.getAnimations();
+//        for (let i = 0; i < anis.length; i++) {
+//            anis[i].pause();
+//        }
+//        let times = {};
+//        for (let i = 0; i < anis.length; i++) {
+//            let ani = anis[i];
+//            let aniName = ani.animationName;
+//            if (!(aniName in times)) {
+//                times[aniName] = {};
+//            }
+//            times[aniName][ani.effect.target.id] = ani.currentTime;
+//        }
+//        return times;
+        return document.getAnimations().length;
+    }
+
+    cancel_animations() {
         let anis = document.getAnimations();
         for (let i = 0; i < anis.length; i++) {
-            anis[i].pause();
+            let ani = anis[i];
+            if (Object.prototype.toString.call(ani) === "[object CSSAnimation]") {
+                ani.cancel();        
+            }
         }
-        let times = [];
+    }
+
+    cancel_transitions() {
+        let anis = document.getAnimations();
         for (let i = 0; i < anis.length; i++) {
             let ani = anis[i];
-            times.push(ani.currentTime);
+            if (Object.prototype.toString.call(ani) === "[object CSSTransition]") {
+                ani.cancel();        
+            }
         }
-        return times;
+    }
+
+    fit_animations() {
+        let js = `<script id="fit">
+        let foc = document.getElementById(window.SC.focus_node.id);
+        if (foc) {
+            foc.focus();
+        }
+        let ani_dict = {};
+        let anis = document.getAnimations();
+        for (let i = 0; i < anis.length; i++) {
+            let ani = anis[i];
+            ani.cancel();
+        }
+        </script>`
+        return js;
+    }
+
+    compare_nodes(a, b) {
+        if (a.querySelectorAll('*').length !== b.querySelectorAll('*').length) return false;
+        if (a.outerHTML !== b.outerHTML) return false;
+        return true;
     }
 
     is_dom_same() {
-        return this.dom_tree.isEqualNode(document.body)
+        let node = this.get_dom_tree();
+        let fit = node.querySelector('#fit');
+        if (fit) { fit.remove(); }
+        return this.compare_nodes(this.dom_tree, node);
     }
 
     is_css_same() {
-        return this.css_rule === this.get_css_rules()
+        return this.css_rule === this.get_css_rules();
     }
 
     is_focus_same() {
-        return this.focus_node.isEqualNode(document.activeElement);
+        let node = this.get_focus_node();
+        let fit = node.querySelector('#fit');
+        if (fit) { fit.remove(); }
+        return this.compare_nodes(this.focus_node, node);
     }
 
     is_scroll_position_same() {
-        return JSON.stringify(this.scroll_positions) === JSON.stringify(this.get_scroll_positions());
+        let node = this.get_dom_tree();
+        let fit = node.querySelector('#fit');
+        if (fit) { fit.remove(); }
+
+        let a = this.scroll_positions;
+        let b = this.get_scroll_positions(node);
+
+        if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+            if (a[i][0] !== b[i][0] || a[i][1] !== b[i][1]) return false;
+        }
+
+        return true;
     }
 
     is_animation_same() {
-        return JSON.stringify(this.animations) === JSON.stringify(this.get_animations());
+//        let anis = this.get_animations();
+//        for (var key in this.animations) {
+//            if (!(key in anis) || anis[key] != this.animations[key]) return false;
+//        }
+//        for (var key in anis) {
+//            if (!(key in this.animations)) {
+//                return false;
+//            }
+//        }
+//        return true;
+        return this.animations == 0 && this.get_animations() == 0;
     }
 
     is_same_state() {
-        if (!this.is_dom_same() ||
-            !this.is_css_same() ||
-            !this.is_focus_same() ||
-            !this.is_scroll_position_same()
+        if (
+//            !this.is_css_same() ||
+            !this.is_dom_same() ||
+            !this.is_focus_same() || 
+            !this.is_scroll_position_same() || 
+            !this.is_animation_same()
            )  
             return false;
         else
@@ -160,11 +239,10 @@ window.StateChecker = class StateChecker {
                 css += css_r.join('\n');
             }
         }
-        return css + "</style><script src='/tmp/metamor.js'></script></head>" + outer + "</html>";
+        return css + "</style><script src='/tmp/metamor.js'></script></head>" + outer + this.fit_animations() + "</html>";
     }
 
     write_document() {
-        //document.documentElement.innerHTML = this.page_html;
         document.open();
         document.write(this.page_html);
         document.close();

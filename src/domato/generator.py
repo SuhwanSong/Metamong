@@ -209,7 +209,7 @@ def main(index):
 
 if __name__ == '__main__':
     ps = []
-    for i in range(16):
+    for i in range(os.cpu_count()):
         p = Process(target=main, args=(i,))
         p.start()
 

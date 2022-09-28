@@ -24,6 +24,7 @@ from shutil import copyfile
 from bs4 import BeautifulSoup
 from collections import defaultdict
 
+from mutater import MetaMut
 from multiprocessing import Process
 
 class CrossVersion(Thread):
@@ -82,6 +83,13 @@ class CrossVersion(Thread):
 
     def single_test_html(self, html_file: str, muts: list, phash: bool = False):
         br = self.get_newer_browser()
+        if not muts:
+            meta_mut = MetaMut()
+            dic = br.analyze_html(html_file)
+            if not dic: return
+            meta_mut.load_state(dic)
+            muts.extend(meta_mut.generate())
+
         for _ in range(self.iter_num):
             is_bug = self.__test_wrapper(br, html_file, muts, phash=phash)
             if not is_bug: return False
@@ -267,7 +275,7 @@ class Minimizer(CrossVersion):
         self.__js_file = html_file.replace('.html', '.js')
 
         self.__min_html = FileManager.read_file(html_file)
-        self.__muts = FileManager.read_file(self.__js_file).split('\n')
+        self.__muts = FileManager.read_js_file(self.__js_file)
         return self.cross_version_test_html(html_file, self.__muts)
 
     def __minimize_sline(self, idx, style_lines):

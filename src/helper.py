@@ -117,7 +117,7 @@ class IOQueue:
         vers = (self.revlist[0], self.revlist[-1])
         for testcase in testcases:
             js = testcase.replace('.html', '.js')
-            muts = FileManager.read_file(js).split('\n') if exists(js) else []
+            muts = FileManager.read_js_file(js) if exists(js) else []
             self.insert_to_queue(vers, testcase, muts)
 
         self.start_time = time.time()
@@ -359,6 +359,13 @@ class FileManager:
     def read_file(name):
         with open(name, 'r') as fp:
             return fp.read()
+
+    def read_js_file(name):
+        with open(name, 'r') as fp:
+            lines = fp.readlines()
+            for i in range(len(lines)):
+                lines[i] = lines[i].replace('\n', '')
+            return lines
 
 class VersionManager:
     def __init__(self):

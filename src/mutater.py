@@ -4,14 +4,17 @@ from random import randrange, choice, sample
 class MetaMut:
     def __init__(self):
         self.__tags = []
-        for tag in FileManager.read_file('../data/html_tags'):
-            self.__tags.append(tag[1:-2])
+        for tag in FileManager.read_file('../data/html_tags').split('\n'):
+            self.__tags.append(tag)
+
+        self.__tags.remove('')
+
 
         self.mut_func = []
 
         low_weight_list = [
              self.move_node,
-             self.tag_change,# 99 / 100
+             #self.tag_change,# 99 / 100
         ]
 
         high_weight_list = [
@@ -24,7 +27,7 @@ class MetaMut:
         self.mut_func.extend(high_weight_list * 3)
 
         self.min_num = 1
-        self.max_num = 5
+        self.max_num = 8
 
     def save_state(self):
         return 'window.SC = new window.StateChecker();'
@@ -80,6 +83,8 @@ class MetaMut:
 
     def del_attribute(self):
         id_ = choice(self.ids)
+        if not self.attributes[id_]:
+            return ""
         attrn = choice(self.attributes[id_])
         return f"window.Mut = new window.DelAttribute('{id_}', '{attrn}');"
 

@@ -13,8 +13,6 @@ from os.path import dirname, join, abspath, splitext, exists
 from chrome_binary import ChromeBinary
 from firefox_binary import FirefoxBinary
 
-from mutater import MetaMut
-
 GET_ATTRNAMES="""
 let attrs = [];
 const elements = document.body.querySelectorAll('*');
@@ -236,6 +234,8 @@ class Browser:
 
     def analyze_html(self, html_file):
         dic = {}
+        if not self.run_html(html_file): return dic
+
         scripts = {'ids': 'return get_all_ids();',
                    'attributes': 'return get_all_attributes();',
                    'css_length': 'return get_css_length();',
@@ -256,15 +256,8 @@ class Browser:
         return self.exec_script("return window.SC.is_same_state();")
 
     def metamor_test(self, html_file, muts, save_shot=False, phash=False):
+        if not muts: return 
         if not self.run_html(html_file): return
-        if not muts:
-            meta_mut = MetaMut()
-            dic = self.analyze_html(html_file)
-            if not dic: return
-            meta_mut.load_state(dic)
-            muts.extend(meta_mut.generate())
-            if not self.run_html(html_file): return
-
         for mut in muts: self.exec_script(mut)
 
         # TODO: stop all animation and save all stateus
@@ -276,7 +269,13 @@ class Browser:
         if not hash_v1: return
 
         self.__re_render()
-        if not self.__is_same_state(): return
+        if not self.__is_same_state():
+            #print ('state is different', html_file, muts)
+            return
+        else:
+            #print ('state is same', html_file, muts)
+            pass
+            
 
         screenshot_name = f'{name_noext}_{self.version}_b.png' if save_shot else None
         hash_v2 = self.__screenshot_and_hash(screenshot_name, phash=phash)
