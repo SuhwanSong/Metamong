@@ -61,9 +61,9 @@ window.StateChecker = class StateChecker {
         this.cancel_animations();
 
         this.dom_tree = this.get_dom_tree();
-        this.css_rule = this.get_css_rules();
+        //this.css_rule = this.get_css_rules();
         this.focus_node = this.get_focus_node();
-        this.scroll_positions = this.get_scroll_positions();
+        this.scroll_positions = this.get_scroll_positions(this.dom_tree);
         this.animations = this.get_animations();
 
         this.page_html = this.get_page();
@@ -92,14 +92,11 @@ window.StateChecker = class StateChecker {
         return document.activeElement.cloneNode(true);
     }
 
-    get_scroll_positions() {
+    get_scroll_positions(allElements) {
         let positions = [[window.scrollX, window.scrollY]];
-        let allElements = get_elements();
         for (let i = 0; i < allElements.length; i++) {
             let ele = allElements[i];
-            if (ele.id !== 'fit') {
-                positions.push([ele.scrollTop, ele.scrollLeft]);
-            }
+            positions.push([ele.scrollTop, ele.scrollLeft]);
         }
         return positions;
     }
@@ -165,10 +162,10 @@ window.StateChecker = class StateChecker {
     }
 
     is_dom_same() {
-        let dom_tree = this.get_dom_tree();
-        dom_tree.querySelector('#fit').remove();
- 
-        return this.compare_nodes(this.dom_tree, dom_tree);
+        let node = this.get_dom_tree();
+        let fit = node.querySelector('#fit');
+        if (fit) { fit.remove(); }
+        return this.compare_nodes(this.dom_tree, node);
     }
 
     is_css_same() {
@@ -183,8 +180,13 @@ window.StateChecker = class StateChecker {
     }
 
     is_scroll_position_same() {
+        let node = this.get_dom_tree();
+        let fit = node.querySelector('#fit');
+        if (fit) { fit.remove(); }
+
         let a = this.scroll_positions;
-        let b = this.get_scroll_positions();
+        let b = this.get_scroll_positions(node);
+
         if (a.length !== b.length) return false;
         for (let i = 0; i < a.length; i++) {
             if (a[i][0] !== b[i][0] || a[i][1] !== b[i][1]) return false;
