@@ -9,12 +9,8 @@ GIT_VER=$1
 
 pushd $CHM_DIR &> /dev/null
 hg update $GIT_VER --clean
-
-if [ "$2" = "no" ]; then
-  popd &> /dev/null
-  exit 0
-fi
 ./mach clobber
+echo -ne '2\nn' | ./mach bootstrap
 ./mach build
 retVal=$?
 if [ $retVal -ne 0 ]; then
@@ -23,9 +19,14 @@ if [ $retVal -ne 0 ]; then
     exit 1
 fi
 
-mv obj-x86_64-pc-linux-gnu/ ../$GIT_VER
-ln -s ../$GIT_VER/dist/bin/firefox ../$GIT_VER/firefox 
-ln -s ../geckodriver ../$GIT_VER/geckodriver
+pushd obj-x86_64-pc-linux-gnu/dist/bin
+find . -type l -exec $CUR_DIR/tools/sym_to_real.sh {} +
+popd
+
+
+mv obj-x86_64-pc-linux-gnu/dist/bin ../$GIT_VER
+#ln -s ../$GIT_VER/firefox ../$GIT_VER/firefox 
+#ln -s ../geckodriver ../$GIT_VER/geckodriver
 
 popd &> /dev/null
 echo $PWD

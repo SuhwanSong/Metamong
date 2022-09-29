@@ -31,7 +31,7 @@ def acquire_timeout(lock, timeout):
     if result:
         lock.release()
 
-MILESTONE = {
+CHROME_MILESTONE = {
     79: 706915,
     80: 722274,
     81: 737173,
@@ -61,6 +61,16 @@ MILESTONE = {
     105:1027018,
     106:1036826,
     107:1047731,
+}
+
+FIREFOX_MILESTONE = {
+    100: 613239,
+    101: 615744,
+    102: 619134,
+    103: 622119,
+    104: 624997,
+    105: 627802,
+    106: 635720,
 }
 
 class bcolors:
@@ -368,33 +378,45 @@ class FileManager:
             return lines
 
 class VersionManager:
-    def __init__(self):
-        csvfile = join(
+    def __init__(self, br='chrome'):
+        self.br = br
+        if br == 'chrome':
+            self.revlist = []
+            csvfile = join(
                 dirname(dirname(abspath(__file__))),
                 'data', 
                 'bisect-builds-cache.csv')
-        self.revlist = []
-        with open(csvfile, 'r') as fp:
-            line = fp.readline()
-            vers = line.split(', ')
-            for ver in vers:
-                v = int(ver)
-                self.revlist.append(v)
-        self.revlist.sort()
+            with open(csvfile, 'r') as fp:
+                line = fp.readline()
+                vers = line.split(', ')
+                for ver in vers:
+                    v = int(ver)
+                    self.revlist.append(v)
+                    self.revlist.sort()
 
     def get_revision(self, version):
-        return self.revlist[bisect.bisect_left(self.revlist, MILESTONE[version - 1]) - 1]
+        if self.br == 'chrome':
+            return self.revlist[bisect.bisect_left(self.revlist, CHROME_MILESTONE[version - 1]) - 1]
+        else:
+            return FIREFOX_MILESTONE[version]
 
     def get_end_revision(self, version):
-        return self.revlist[bisect.bisect_left(self.revlist, MILESTONE[version]) - 1]
+        if self.br == 'chrome':
+            return self.revlist[bisect.bisect_left(self.revlist, CHROME_MILESTONE[version]) - 1]
+        else:
+            return FIREFOX_MILESTONE[version + 1] - 1
 
     def get_rev_range(self, a, b):
         tmp = []
         rev_a = self.get_revision(a)
         rev_b = self.get_revision(b)
-        for rev in self.revlist:
-            if rev_a <= rev <= rev_b:
-                tmp.append(rev)
+        if self.br == 'chrome':
+            for rev in self.revlist:
+                if rev_a <= rev <= rev_b:
+                    tmp.append(rev)
+
+        elif self.br == 'firefox':
+            tmp = list(range(rev_a, rev_b + 1))
         return tmp
 
 import hashlib
