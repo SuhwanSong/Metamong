@@ -25,8 +25,8 @@ popd
 
 
 mv obj-x86_64-pc-linux-gnu/dist/bin ../$GIT_VER
-ln -s ../$GIT_VER/firefox ../$GIT_VER/firefox 
-ln -s ../geckodriver ../$GIT_VER/geckodriver
+#ln -s ../$GIT_VER/firefox ../$GIT_VER/firefox 
+#ln -s ../geckodriver ../$GIT_VER/geckodriver
 
 popd &> /dev/null
 echo $PWD

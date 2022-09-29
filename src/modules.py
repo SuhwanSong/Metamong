@@ -539,13 +539,9 @@ class Metamong:
     def process(self) -> None:
         start = time.time()
 
-        self.vm = VersionManager()
+        self.vm = VersionManager(self.browser_type)
         testcases = FileManager.get_all_files(self.in_dir, '.html')
-
-        if self.browser_type == 'chrome':
-            rev_range = self.vm.get_rev_range(self.base_ver, self.target_ver)
-        elif self.browser_type == 'firefox':
-            rev_range = list(range(self.base_ver, self.target_ver + 1))
+        rev_range = self.vm.get_rev_range(self.base_ver, self.target_ver)
 
 
         num_of_tests = len(testcases)
