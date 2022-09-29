@@ -392,7 +392,8 @@ class VersionManager:
                 for ver in vers:
                     v = int(ver)
                     self.revlist.append(v)
-                    self.revlist.sort()
+
+                self.revlist.sort()
 
     def get_revision(self, version):
         if self.br == 'chrome':
