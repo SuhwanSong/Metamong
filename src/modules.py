@@ -519,7 +519,7 @@ class Metamong:
         all_terminated = False
         while not all_terminated:
             self.ioq.monitoring()
-            time.sleep(10)
+            time.sleep(1)
             all_terminated = not any([th.is_alive() for th in threads])
 
         self.ioq.reset_lock()

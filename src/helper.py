@@ -342,7 +342,7 @@ class IOQueue:
             cur_time = time.time()
             for cur_test in self.monitor:
                 br, t = self.monitor[cur_test]
-                if cur_time - t > 30:
+                if cur_time - t > 180:
                     brs.append(br)
                     printf ('WARNING', f'Chrome {cur_test[1]} in thread {cur_test[0]} is hanging ... {cur_test[2]}')
 

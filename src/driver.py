@@ -51,7 +51,8 @@ class Browser:
         return [window.outerWidth - window.innerWidth + arguments[0],
           window.outerHeight - window.innerHeight + arguments[1]];
         """, self.__width, self.__height)
-        self.browser.set_window_size(*window_size)
+        if window_size:
+            self.browser.set_window_size(*window_size)
 
     # Due to https://github.com/mozilla/geckodriver/issues/1744, setting the
     # width/height of firefox includes some browser UI. This workaround is
@@ -117,8 +118,8 @@ class Browser:
                     options = [
                             '--headless',
                             '--disable-gpu',
-                            f'--width={self.__width}',
-                            f'--height={self.__height}',
+#                            f'--width={self.__width}',
+#                            f'--height={self.__height}',
                             ]
                     option = webdriver.firefox.options.Options()
                     fb = FirefoxBinary()
