@@ -257,7 +257,6 @@ class Browser:
         return self.exec_script("return window.SC.is_same_state();")
 
     def metamor_test(self, html_file, muts, save_shot=False, phash=False):
-        if not muts: return 
         if not self.run_html(html_file): return
         for mut in muts: self.exec_script(mut)
 

@@ -128,8 +128,14 @@ class CrossVersion(Thread):
                 if not self.start_browsers(cur_vers):
                     continue
 
-            if not self.report_mode and not self.single_test_html(html_file, muts, phash=True):
-                continue
+            if not self.report_mode:
+                if not self.single_test_html(html_file, muts, phash=True):
+                    continue
+
+                # This is for eliminating non-invalidation bug.
+                br = self.get_newer_browser()
+                if self.__test_wrapper(br, html_file, [], phash=True):
+                    continue
 
             if not self.cross_version_test_html(html_file, muts):
                 continue
@@ -433,17 +439,16 @@ class Minimizer(CrossVersion):
             removed = muts.pop(i)
             if self.cross_version_test_html(self.__temp_file, muts):
                 self.__muts.pop(i)
-                # print (f'{removed} is removed')
             else:
                 muts.insert(i, removed)
 
 
     def __minimizing(self):
+        self.__minimize_js()
         self.__minimize_style()
         self.__minimize_dom()
         self.__minimize_text()
         self.__minimize_inner_element()
-        self.__minimize_js()
 
 
     def run(self) -> None:
@@ -489,8 +494,8 @@ class Metamong:
         self.experiment_result = {}
         self.tester = [
             CrossVersion,
-            Minimizer,
             Bisecter,
+            Minimizer,
         ]
         self.report = [
             CrossVersion,
