@@ -159,7 +159,7 @@ class Bisecter(Thread):
 
     def cross_version_test(self, vers: Tuple[int, int], html_file: str, muts: list):
         cv = CrossVersion(self.helper, self.__btype)
-        cv.start_browser(vers)
+        cv.start_browsers(vers)
         is_bug = cv.cross_version_test_html(html_file, muts)
         cv.stop_browsers()
         del cv
