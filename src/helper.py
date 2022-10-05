@@ -423,7 +423,8 @@ class ImageDiff:
 
     def diff_images(hash_A, hash_B, phash=False):
         if phash:
-            return hash_A - hash_B >= 16
+            #return hash_A - hash_B >= 16
+            return hash_A - hash_B > 0
         else:
             return hash_A != hash_B
 

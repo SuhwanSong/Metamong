@@ -101,7 +101,7 @@ class CrossVersion(Thread):
         br1, br2 = self.br_list
 
         for _ in range(self.iter_num):
-            br1_bug = self.__test_wrapper(br1, html_file, muts)
+            br1_bug = self.__test_wrapper(br1, html_file, muts, phash=True)
             if br1_bug is None: return
             elif br1_bug: return False
 
