@@ -117,7 +117,6 @@ class IOQueue:
         limit = getenv('LIMIT')
         self.limit = 100000 if not limit else int(limit)
 
-        self.version_list = {}
         self.monitor = defaultdict(float)
 
         self.revlist = revision_range
@@ -291,39 +290,21 @@ class IOQueue:
                     FileManager.write_file(new_js_file, '\n'.join(muts))
                     q.put((new_html_file, muts))
 
-    def set_version_list(self, html_file, build) -> None:
+    def convert_to_ver(self, index: int) -> int:
         with acquire_timeout(self.__queue_lock, 1000) as acquired:
             if not acquired: return 
-            if html_file not in self.version_list:
-                if not build:
-                    verlist = copy.deepcopy(self.revlist)
-                else:
-                    verlist = list(range(self.revlist[0], self.revlist[-1] + 1))
-                self.version_list[html_file] = verlist
+            return self.revlist[index]
 
-    def convert_to_ver(self, html_file, index: int) -> int:
+    def convert_to_index(self, version: int) -> int:
         with acquire_timeout(self.__queue_lock, 1000) as acquired:
             if not acquired: return 
-            return self.version_list[html_file][index]
-
-    def convert_to_index(self, html_file, version: int) -> int:
-        with acquire_timeout(self.__queue_lock, 1000) as acquired:
-            if not acquired: return 
-            verlist = self.version_list[html_file]
+            verlist = self.revlist
             index = bisect.bisect_left(verlist, version) 
             if index != len(verlist) and verlist[index] == version:
                 return index
 
-            print ('no index found', html_file, index)
+            print ('no index found', index)
             return -1
-
-    def pop_index_from_list(self, html_file, index):
-        with acquire_timeout(self.__queue_lock, 1000) as acquired:
-            if not acquired: return
-            v = self.version_list[html_file][index]
-            del self.version_list[html_file][index]
-            print ('version delete', html_file, index, v)
-
 
     def record_current_test(self, thread_id, br, html_file):
         with acquire_timeout(self.__queue_lock, 1000) as acquired:
