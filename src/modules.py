@@ -162,7 +162,7 @@ class Bisecter(Thread):
         else:
             raise ValueError('Unsupported browser type')
 
-        self.ref_br = Browser('chrome', ver)
+        self.ref_br = Browser(bt, ver)
         return self.ref_br.setup_browser()
 
     def stop_ref_browser(self) -> None:
