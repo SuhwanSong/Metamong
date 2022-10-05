@@ -37,7 +37,7 @@ class CrossVersion(Thread):
 
         self.report_mode = False
         self.saveshot = False
-        self.iter_num = 3
+        self.iter_num = 4
 
 
     def report_mode(self) -> None:
@@ -191,7 +191,7 @@ class Bisecter(Thread):
     def metamor_test(self, html_file: str, muts: list):
         thread_id = current_thread()
         br = self.ref_br
-        for _ in range(3):
+        for _ in range(4):
             self.helper.record_current_test(thread_id, br, html_file)
             is_bug = self.ref_br.metamor_test(html_file, muts, self.saveshot)
             self.helper.delete_record(thread_id, br, html_file)

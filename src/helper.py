@@ -415,9 +415,10 @@ class ImageDiff:
 
     def get_phash(png):
         stream = png if isinstance(png, str) else BytesIO(png)
+        HASHSIZE = 24
         try:
             with Image.open(stream, 'r') as image:
-                return phash(image, hash_size=16)
+                return phash(image, hash_size=HASHSIZE)
         except Exception as e:
             print (e)
 
