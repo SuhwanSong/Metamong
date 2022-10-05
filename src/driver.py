@@ -123,7 +123,10 @@ class Browser:
                             ]
                     option = webdriver.firefox.options.Options()
                     fb = FirefoxBinary()
-                    fb.ensure_firefox_binaries(browser_dir, self.version)
+                    if not fb.firefox_binary_exist(browser_dir, self.version):
+                        print ('No firefox binaries...', self.version) 
+                        sys.exit(1)
+                        
                     browser_path = fb.get_browser_path(browser_dir, self.version)
                     option.binary_location = browser_path
                     for op in options: option.add_argument(op)

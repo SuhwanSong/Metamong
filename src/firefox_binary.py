@@ -53,6 +53,11 @@ class FirefoxBinary:
         gecko_filename = f'{self.__drivername}-v0.31.0-{self.__gecko_binary}.tar.gz'
         return prefix + gecko_filename
 
+    def firefox_binary_exist(self, path, version):
+        version = str(version)
+        binary_dir_path = os.path.join(path, version)
+        return os.path.exists(binary_dir_path)
+
     # Ensures firefox binaries (firefox + geckodriver) exist in path/revision/.
     # If they do not exist, they will be downloaded. This function returns True
     # if the binaries exist.
