@@ -14,7 +14,8 @@ def main():
     parser.add_argument('-t', '--type', required=False, type=str, default='chrome', help='Browser type')
     parser.add_argument('-p', '--pre', required=True, type=int, help='Version of base Chrome (e.g., 80)')
     parser.add_argument('-n', '--new', required=True, type=int, help='version of target Chrome (e.g., 81)')
-    parser.add_argument('--nomin', action='store_true', help='version of target Chrome (e.g., 81)')
+    parser.add_argument('--nomin', action='store_true',    help='No minimization')
+    parser.add_argument('--nobisect', action='store_true', help='No bisection')
     args = parser.parse_args()
 
     seed(0)
@@ -22,6 +23,8 @@ def main():
     m = Metamong(args.input, args.output, args.job, args.type, args.pre, args.new)
     if args.nomin:
         m.skip_minimizer()
+    if args.nobisect:
+        m.skip_bisecter()
     m.process()
 
 

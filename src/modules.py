@@ -37,7 +37,7 @@ class CrossVersion(Thread):
 
         self.report_mode = False
         self.saveshot = False
-        self.iter_num = 3
+        self.iter_num = 4
 
 
     def report_mode(self) -> None:
@@ -101,7 +101,7 @@ class CrossVersion(Thread):
         br1, br2 = self.br_list
 
         for _ in range(self.iter_num):
-            br1_bug = self.__test_wrapper(br1, html_file, muts)
+            br1_bug = self.__test_wrapper(br1, html_file, muts, phash=True)
             if br1_bug is None: return
             elif br1_bug: return False
 
@@ -157,6 +157,15 @@ class Bisecter(Thread):
 
         self.build = False
 
+    def cross_version_test(self, vers: Tuple[int, int], html_file: str, muts: list):
+        cv = CrossVersion(self.helper, self.__btype)
+        cv.start_browsers(vers)
+        is_bug = cv.cross_version_test_html(html_file, muts)
+        cv.stop_browsers()
+        del cv
+        return is_bug
+
+
     def start_ref_browser(self, ver: int) -> bool:
         self.stop_ref_browser()
 
@@ -182,7 +191,7 @@ class Bisecter(Thread):
     def metamor_test(self, html_file: str, muts: list):
         thread_id = current_thread()
         br = self.ref_br
-        for _ in range(3):
+        for _ in range(4):
             self.helper.record_current_test(thread_id, br, html_file)
             is_bug = self.ref_br.metamor_test(html_file, muts, self.saveshot)
             self.helper.delete_record(thread_id, br, html_file)
@@ -203,22 +212,21 @@ class Bisecter(Thread):
             if len(muts) == 0:
                 raise ValueError('Something wrong in muts...')
 
-            hpr.set_version_list(html_file, self.build)
-
             start, end = vers
             if start >= end:
                 print (html_file, 'start and end are the same;')
                 continue
 
-            start_idx = hpr.convert_to_index(html_file, start)
-            end_idx = hpr.convert_to_index(html_file, end)
+            start_idx = hpr.convert_to_index(start)
+            end_idx = hpr.convert_to_index(end)
 
             if start_idx + 1 == end_idx:
-                hpr.update_postq(vers, html_file, muts)
+                if self.cross_version_test(vers, html_file, muts):
+                    hpr.update_postq(vers, html_file, muts)
                 continue
 
             mid_idx = (start_idx + end_idx) // 2
-            mid = hpr.convert_to_ver(html_file, mid_idx)
+            mid = hpr.convert_to_ver(mid_idx)
             self.cur_mid = mid
             if cur_mid != mid:
                 cur_mid = mid
@@ -228,23 +236,35 @@ class Bisecter(Thread):
 
             is_bug = self.metamor_test(html_file, muts)
             if is_bug is None:
+                mid_prev = hpr.convert_to_ver(mid_idx - 1)
+                mid_next = hpr.convert_to_ver(mid_idx + 1)
+                vers1 = [start, mid_prev]
+                vers2 = [mid_next, end]
+                if self.cross_version_test(vers1, html_file, muts):
+                    hpr.insert_to_queue(vers1, html_file, muts)
+                if self.cross_version_test(vers2, html_file, muts):
+                    hpr.insert_to_queue(vers2, html_file, muts)
                 continue
 
             elif not is_bug:
                 if mid_idx + 1 == end_idx:
-                    hpr.update_postq((mid, end), html_file, muts)
-                    #print (html_file, mid, end, 'postq 1')
+                    u_vers = [mid, end]
+                    if self.cross_version_test(u_vers, html_file, muts):
+                        hpr.update_postq(u_vers, html_file, muts)
+                        #print (html_file, mid, end, 'postq 1')
                     continue
-                low = hpr.convert_to_ver(html_file, mid_idx)
+                low = hpr.convert_to_ver(mid_idx)
                 high = end
 
             else:
                 if mid_idx - 1 == start_idx:
-                    hpr.update_postq((start, mid), html_file, muts)
-                    #print (html_file, start, mid, 'postq 2')
+                    u_vers = [start, mid]
+                    if self.cross_version_test(u_vers, html_file, muts):
+                        hpr.update_postq(u_vers, html_file, muts)
+                        #print (html_file, start, mid, 'postq 2')
                     continue
                 low = start
-                high = hpr.convert_to_ver(html_file, mid_idx)
+                high = hpr.convert_to_ver(mid_idx)
 
             hpr.insert_to_queue((low, high), html_file, muts)
 
