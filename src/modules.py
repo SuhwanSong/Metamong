@@ -238,8 +238,8 @@ class Bisecter(Thread):
             if is_bug is None:
                 mid_prev = hpr.convert_to_ver(mid_idx - 1)
                 mid_next = hpr.convert_to_ver(mid_idx + 1)
-                vers1 = [start, mid_prev]
-                vers2 = [mid_next, end]
+                vers1 = (start, mid_prev)
+                vers2 = (mid_next, end)
                 if self.cross_version_test(vers1, html_file, muts):
                     hpr.insert_to_queue(vers1, html_file, muts)
                 if self.cross_version_test(vers2, html_file, muts):
@@ -248,7 +248,7 @@ class Bisecter(Thread):
 
             elif not is_bug:
                 if mid_idx + 1 == end_idx:
-                    u_vers = [mid, end]
+                    u_vers = (mid, end)
                     if self.cross_version_test(u_vers, html_file, muts):
                         hpr.update_postq(u_vers, html_file, muts)
                         #print (html_file, mid, end, 'postq 1')
@@ -258,7 +258,7 @@ class Bisecter(Thread):
 
             else:
                 if mid_idx - 1 == start_idx:
-                    u_vers = [start, mid]
+                    u_vers = (start, mid)
                     if self.cross_version_test(u_vers, html_file, muts):
                         hpr.update_postq(u_vers, html_file, muts)
                         #print (html_file, start, mid, 'postq 2')
