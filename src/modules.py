@@ -554,7 +554,7 @@ class Metamong:
             if alive == 0: break
 
             if alive < num_th:
-                left = hpr.left()
+                left = self.ioq.left()
                 print (f'{alive} of {num_th} Threads are alive, {left} inputs are left...')
 
         self.ioq.reset_lock()
