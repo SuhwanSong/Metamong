@@ -320,6 +320,7 @@ class IOQueue:
         brs = []
         with acquire_timeout(self.__queue_lock, 1000) as acquired:
             if not acquired: return
+
             cur_time = time.time()
             for cur_test in self.monitor:
                 br, t = self.monitor[cur_test]
@@ -329,6 +330,16 @@ class IOQueue:
 
         for br in brs:
             br.kill_browser_by_pid()
+
+
+    def left(self):
+        left = 0
+        with acquire_timeout(self.__queue_lock, 1000) as acquired:
+            if not acquired: return left
+            for key in self.__preqs.keys():
+                left += self.__preqs[key].qsize()
+
+        return left
 
 class FileManager:
     def get_all_files(root, ext=None) -> list:
