@@ -541,11 +541,20 @@ class Metamong:
         for th in threads:
             th.start()
 
-        all_terminated = False
-        while not all_terminated:
+        num_th = len(threads)
+        alive = num_th
+        while True:
             self.ioq.monitoring()
             time.sleep(1)
-            all_terminated = not any([th.is_alive() for th in threads])
+
+            alive = 0
+            for th in threads:
+                if th.is_alive(): alive += 1
+
+            if alive == 0: break
+
+            if alive < num_th:
+                print (f'{alive} of {num_th} Threads are alive...')
 
         self.ioq.reset_lock()
         elapsed = time.time() - start

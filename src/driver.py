@@ -151,18 +151,19 @@ class Browser:
 
         for _ in range(5):
             try:
-                TIMEOUT = 10
                 platform = sys.platform
                 platform_funcs = {'linux': self.__set_viewport_size,
                                   'darwin': self.__adjust_viewport_size, }
                 platform_funcs[platform]()
-                self.browser.set_script_timeout(TIMEOUT)
-                self.browser.set_page_load_timeout(TIMEOUT)
-                self.browser.implicitly_wait(TIMEOUT)
                 break
             except Exception as e:
                 print (e)
                 continue
+
+        TIMEOUT = 10
+        self.browser.set_script_timeout(TIMEOUT)
+        self.browser.set_page_load_timeout(TIMEOUT)
+        self.browser.implicitly_wait(TIMEOUT)
 
         return True
 
@@ -177,7 +178,7 @@ class Browser:
         return True
 
     def kill_browser_by_pid(self):
-        if not self.browser:
+        if not self.browser or self.__browser_type == 'firefox':
             return False
         br = self.browser
         if not br.session_id or not br.service or not br.service.process:
