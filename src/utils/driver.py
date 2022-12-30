@@ -1,8 +1,6 @@
 import sys
 import time, psutil
 from pathlib import Path
-from helper import ImageDiff
-from helper import FileManager
 
 from selenium import webdriver
 from collections import defaultdict
@@ -10,8 +8,10 @@ from collections import defaultdict
 from os import environ
 from os.path import dirname, join, abspath, splitext, exists
 
-from chrome_binary import ChromeBinary
-from firefox_binary import FirefoxBinary
+from utils.helper import ImageDiff
+from utils.helper import FileManager
+from utils.chrome_binary import ChromeBinary
+from utils.firefox_binary import FirefoxBinary
 
 GET_ATTRNAMES="""
 let attrs = [];

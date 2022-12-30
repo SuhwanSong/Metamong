@@ -12,17 +12,18 @@ from typing import Optional, Tuple
 from shutil import copyfile
 from collections import defaultdict
 
-from firefox_binary import build_firefox_binary
-from chrome_binary import build_chrome_binary
-from chrome_binary import get_commit_from_position
-
 from contextlib import contextmanager
 
 from PIL import Image
 from io import BytesIO
 from os import walk, listdir, getenv
 from os.path import join, dirname, abspath, exists, basename
-from chrome_binary import ChromeBinary
+
+from utils.firefox_binary import build_firefox_binary
+from utils.chrome_binary import ChromeBinary
+from utils.chrome_binary import build_chrome_binary
+from utils.chrome_binary import get_commit_from_position
+
 
 @contextmanager
 def acquire_timeout(lock, timeout):

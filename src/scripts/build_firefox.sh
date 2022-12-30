@@ -2,7 +2,7 @@
 # ref: https://gitlab.com/noencoding/OS-X-Chromium-with-proprietary-codecs/-/wikis/List-of-all-gn-arguments-for-Chromium-build
 # set -o xtrace
 
-CUR_DIR="$( cd "$(dirname "$0")" ; pwd -P )"/..
+CUR_DIR="$( cd "$(dirname "$0")" ; pwd -P )"/../../
 CHM_DIR=$CUR_DIR/firefox/mozilla-central
 
 GIT_VER=$1
