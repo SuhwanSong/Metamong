@@ -376,7 +376,7 @@ class VersionManager:
         if br == 'chrome':
             self.revlist = []
             csvfile = join(
-                dirname(dirname(abspath(__file__))),
+                dirname(dirname(dirname(abspath(__file__)))),
                 'data', 
                 'bisect-builds-cache.csv')
             with open(csvfile, 'r') as fp:
