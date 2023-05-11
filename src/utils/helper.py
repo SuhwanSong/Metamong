@@ -373,8 +373,8 @@ class FileManager:
 class VersionManager:
     def __init__(self, br='chrome'):
         self.br = br
+        self.revlist = []
         if br == 'chrome':
-            self.revlist = []
             csvfile = join(
                 dirname(dirname(dirname(abspath(__file__)))),
                 'data', 
@@ -385,7 +385,6 @@ class VersionManager:
                 for ver in vers:
                     v = int(ver)
                     self.revlist.append(v)
-
                 self.revlist.sort()
 
     def get_revision(self, version):

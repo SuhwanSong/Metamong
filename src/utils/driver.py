@@ -105,7 +105,7 @@ class Browser:
                 elif self.__browser_type == 'firefox':
                     options = [
 #                            '--headless',
-                            '--disable-gpu',
+#                            '--disable-gpu',
 #                            f'--width={self.__width}',
 #                            f'--height={self.__height}',
                             ]
@@ -120,6 +120,7 @@ class Browser:
                     for op in options: option.add_argument(op)
 
                     driver_path = fb.get_driver_path(browser_dir, self.version)
+                    print (driver_path)
                     self.browser = webdriver.Firefox(options=option,
                             executable_path=driver_path)
                 else:
@@ -137,17 +138,6 @@ class Browser:
             print (f"Browser {self.version} fails to start..")
             sys.exit(1)
 
-        for _ in range(5):
-            try:
-                platform = sys.platform
-                platform_funcs = {'linux': self.__set_viewport_size,
-                                  'darwin': self.__adjust_viewport_size, }
-                platform_funcs[platform]()
-                break
-            except Exception as e:
-                print (e)
-                continue
-
         TIMEOUT = 10
         self.browser.set_script_timeout(TIMEOUT)
         self.browser.set_page_load_timeout(TIMEOUT)
@@ -156,7 +146,17 @@ class Browser:
         if self.__popup:
             self.exec_script(f'window.open("", "", {self.__width}, {self.__height})')
             self.browser.switch_to.window(self.browser.window_handles[1])
-
+        else:
+            for _ in range(5):
+                try:
+                    platform = sys.platform
+                    platform_funcs = {'linux': self.__set_viewport_size,
+                                      'darwin': self.__adjust_viewport_size, }
+                    platform_funcs[platform]()
+                    break
+                except Exception as e:
+                    print (e)
+                    continue
         return True
 
     def kill_browser(self):
