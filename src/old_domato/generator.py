@@ -330,11 +330,13 @@ def setup_for_html_generation():
     return htmlgrammar, cssgrammar
 
 def gen_html(htmlgrammar):
-    html = htmlgrammar.generate_symbol('bodyelements')
-    return '<html><body>' + html + '</body></html>'
+    return htmlgrammar.generate_symbol('element')
+
+def gen_attribute(htmlgrammar):
+    return htmlgrammar.generate_symbol('attribute')
 
 def gen_css(cssgrammar):
-    return cssgrammar.generate_symbol('rules').replace('\r','')
+    return cssgrammar.generate_symbol('declaration').replace('\r','')
 
 
 def generate_new_sample(template, htmlgrammar, cssgrammar, jsgrammar):
@@ -343,6 +345,10 @@ def generate_new_sample(template, htmlgrammar, cssgrammar, jsgrammar):
 
     css = cssgrammar.generate_symbol('rules')
     html = htmlgrammar.generate_symbol('bodyelements')
+    print (htmlgrammar.generate_symbol('attribute').replace('\r',''))
+    print ()
+
+    print (cssgrammar.generate_symbol('declaration').replace('\r',''))
 
     htmlctx = {
         'htmlvars': [],
@@ -534,7 +540,7 @@ def main(index):
 
 if __name__ == '__main__':
     ps = []
-    for i in range(os.cpu_count()):
+    for i in range(1):
         p = Process(target=main, args=(i,))
         p.start()
 

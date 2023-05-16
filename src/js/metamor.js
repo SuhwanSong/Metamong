@@ -321,10 +321,7 @@ window.TagChange = class TagChange {
 window.AddNode = class AddNode {
     constructor (id, pos, html) {
         let node = document.getElementById(id);
-        this.mutable = true;
-        if (!node) {
-            this.mutable = false;
-        } else {
+        if (node) 
             this.new_node = this.html_to_element(html);
             node.insertAdjacentElement(pos, this.new_node);
         }
@@ -335,12 +332,6 @@ window.AddNode = class AddNode {
         html = html.trim();
         template.innerHTML = html;
         return template.content.firstChild;
-    }
-
-    restore () {
-        if (this.mutable) {
-            this.new_node.remove();
-        }
     }
 }
 
@@ -546,4 +537,20 @@ window.Scrolling = class Scrolling {
             this.node.scroll(this.scrollLeft, this.scrollTop);
         }
     }
+}
+
+function focusing(id) {
+    let node = document.getElementById(id);
+    if (node) node.focus();
+}
+
+function scrolling(id, scrollLeft, scrollTop) {
+    let node = document.getElementById(id);
+    if (node) {
+        node.scroll(scrollLeft, scrollTop);
+    }
+}
+
+function resizing(width, height) {
+    window.resizeTo(width, height);
 }
