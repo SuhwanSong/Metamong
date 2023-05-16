@@ -345,11 +345,6 @@ def generate_new_sample(template, htmlgrammar, cssgrammar, jsgrammar):
 
     css = cssgrammar.generate_symbol('rules')
     html = htmlgrammar.generate_symbol('bodyelements')
-    print (htmlgrammar.generate_symbol('attribute').replace('\r',''))
-    print ()
-
-    print (cssgrammar.generate_symbol('declaration').replace('\r',''))
-
     htmlctx = {
         'htmlvars': [],
         'htmlvarctr': 0,

@@ -96,6 +96,7 @@ class Browser:
                     cb.ensure_chrome_binaries(browser_dir, self.version)
 
                     browser_path = cb.get_browser_path(browser_dir, self.version)
+                    print (browser_path)
                     option.binary_location = browser_path
                     for op in options: option.add_argument(op)
 

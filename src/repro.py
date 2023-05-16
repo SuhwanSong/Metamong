@@ -36,8 +36,8 @@ def test(html_dir):
         else:
             version = json_object["target_ver"]
 
-    #disp = Display(size=(1600, 1200))
-    #disp.start()
+    disp = Display(size=(1600, 1200))
+    disp.start()
     use_popup = True
     if "popup" in json_object:
         use_popup = json_object["popup"]
@@ -67,6 +67,6 @@ def test(html_dir):
         print ('Oracle fails...')
 
     b.kill_browser()
-    #disp.stop()
+    disp.stop()
 
 test(sys.argv[1])

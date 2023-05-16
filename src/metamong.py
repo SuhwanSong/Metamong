@@ -10,6 +10,8 @@ from minimizer import Minimizer
 
 from os.path import join, dirname, basename
 
+from utils.helper import FileManager, VersionManager, IOQueue
+
 class Metamong:
     def __init__(self, input_dir: str, output_dir: str, num_of_threads: int,
                  browser_type:str, base_version: int, target_version: int) -> None:
@@ -73,7 +75,7 @@ class Metamong:
         self.ioq.move_to_preqs()
         if not report:
             dirname = class_name
-            dir_path = os.path.join(self.out_dir, dirname)
+            dir_path = join(self.out_dir, dirname)
             self.ioq.dump_queue(dir_path)
 
 
@@ -94,7 +96,7 @@ class Metamong:
         self.ioq = IOQueue(testcases, rev_range)
 
         disp = Display(size=(1600, 1200))
-        disp.start()
+        #disp.start()
 
         for test in self.tester: 
             self.test_wrapper(test)
@@ -103,7 +105,7 @@ class Metamong:
         self.experiment_result['TOTAL TIME'] = str(timedelta(seconds=elapsed))
 
         if self.report:
-            self.ioq.dump_queue_with_sort(os.path.join(self.out_dir, 'Report'))
+            self.ioq.dump_queue_with_sort(join(self.out_dir, 'Report'))
             for test in self.report: 
                 self.test_wrapper(test, True)
 
