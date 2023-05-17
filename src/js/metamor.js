@@ -321,7 +321,7 @@ window.TagChange = class TagChange {
 window.AddNode = class AddNode {
     constructor (id, pos, html) {
         let node = document.getElementById(id);
-        if (node) 
+        if (node) { 
             this.new_node = this.html_to_element(html);
             node.insertAdjacentElement(pos, this.new_node);
         }

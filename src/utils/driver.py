@@ -192,6 +192,7 @@ class Browser:
         try:
             return self.browser.execute_script(scr, arg)
         except Exception as e:
+            print (scr, e)
             return None
 
     def run_html(self, html_file: str):
@@ -251,7 +252,7 @@ class Browser:
 
     def analyze_html(self, html_file):
         dic = {}
-        if not self.run_html(html_file): return dic
+        self.run_html(html_file)
 
         scripts = {'ids': 'return get_all_ids();',
                    'attributes': 'return get_all_attributes();',
@@ -259,6 +260,7 @@ class Browser:
         }
 
         for key in scripts:
+            print (scripts[key])
             dic[key] = self.exec_script(scripts[key])
             if not dic[key]: return {}
         return dic
@@ -281,7 +283,8 @@ class Browser:
         hash_v1 = self.__screenshot_and_hash(screenshot_name, phash=phash)
         if not hash_v1: return
 
-        self.run_html_for_expect(html_file, muts)
+        exp_file = html_file.replace('.html', '_expected.html')
+        self.run_html_for_expect(html_file, muts, exp_file)
 
         screenshot_name = f'{name_noext}_{self.version}_b.png' if save_shot else None
         hash_v2 = self.__screenshot_and_hash(screenshot_name, phash=phash)

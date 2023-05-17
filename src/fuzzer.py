@@ -23,6 +23,8 @@ class Fuzzer(Thread):
         self.saveshot = False
         self.iter_num = 4
 
+        self.meta_mut = MetaMut()
+
 
     def report_mode(self) -> None:
         self.report_mode = True
@@ -67,11 +69,10 @@ class Fuzzer(Thread):
 
     def gen_muts(self, html_file: str, muts: list):
         br = self.get_newer_browser()
-        meta_mut = MetaMut()
         dic = br.analyze_html(html_file)
         if not dic: return
-        meta_mut.load_state(dic)
-        muts.extend(meta_mut.generate())
+        self.meta_mut.load_state(dic)
+        muts.extend(self.meta_mut.generate())
 
     def test_html(self, html_file: str, muts: list, phash: bool = False):
         br = self.get_newer_browser()
@@ -104,11 +105,11 @@ class Fuzzer(Thread):
                 remove(html_file) 
                 continue
 
+            print (muts)
             if not muts:
                 self.gen_muts(html_file, muts)
                 FileManager.write_file(html_file.replace('.html', '.js'), '\n'.join(muts))
                  
-
             if self.test_html(html_file, muts, phash=True):
                 hpr.update_postq(vers, html_file, muts)
 

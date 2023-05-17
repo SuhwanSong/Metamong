@@ -330,13 +330,13 @@ def setup_for_html_generation():
     return htmlgrammar, cssgrammar
 
 def gen_html(htmlgrammar):
-    return htmlgrammar.generate_symbol('element')
+    return re.sub(r'[^\x00-\x7f]',r'', htmlgrammar.generate_symbol('element').replace('`', ''))
 
 def gen_attribute(htmlgrammar):
-    return htmlgrammar.generate_symbol('attribute')
+    return re.sub(r'[^\x00-\x7f]',r'', htmlgrammar.generate_symbol('attribute').replace('`', ''))
 
 def gen_css(cssgrammar):
-    return cssgrammar.generate_symbol('declaration').replace('\r','')
+    return re.sub(r'[^\x00-\x7f]',r'', cssgrammar.generate_symbol('declaration').replace('`',''))
 
 
 def generate_new_sample(template, htmlgrammar, cssgrammar, jsgrammar):
@@ -363,8 +363,7 @@ def generate_new_sample(template, htmlgrammar, cssgrammar, jsgrammar):
     html = html.replace('-webkit-', '')
     result = result.replace('<cssfuzzer>', css)
     result = result.replace('<htmlfuzzer>', html)
-
-    return result
+    return re.sub(r'[^\x00-\x7f]',r'', result)
 
 
 def generate_samples(grammar_dir, outfiles):

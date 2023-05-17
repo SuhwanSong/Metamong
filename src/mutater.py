@@ -69,8 +69,9 @@ class MetaMut:
 
     def add_node(self):
         id_ = choice(self.ids)
-        html = gen_html(self.hg) 
-        #return f"window.Mut = new window.AddNode('{id_}', `{html}`);" 
+        pos = choice(['beforebegin', 'afterbegin', 'beforeend', 'afterend']) 
+        html = gen_html(self.hg)
+        return f"window.Mut = new window.AddNode('{id_}', '{pos}', `{html}`);" 
 
     def del_node(self):
         id_ = choice(self.ids)

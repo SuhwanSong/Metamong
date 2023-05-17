@@ -96,7 +96,7 @@ class Metamong:
         self.ioq = IOQueue(testcases, rev_range)
 
         disp = Display(size=(1600, 1200))
-        #disp.start()
+        disp.start()
 
         for test in self.tester: 
             self.test_wrapper(test)
