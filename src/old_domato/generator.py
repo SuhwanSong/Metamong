@@ -534,7 +534,7 @@ def main(index):
 
 if __name__ == '__main__':
     ps = []
-    for i in range(1):
+    for i in range(20):
         p = Process(target=main, args=(i,))
         p.start()
 

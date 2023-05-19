@@ -5,7 +5,7 @@ from pathlib import Path
 from selenium import webdriver
 from collections import defaultdict
 
-from os import environ
+from os import environ, remove
 from os.path import dirname, join, abspath, splitext, exists
 
 from utils.helper import ImageDiff
@@ -285,6 +285,7 @@ class Browser:
 
         exp_file = html_file.replace('.html', '_expected.html')
         self.run_html_for_expect(html_file, muts, exp_file)
+        remove(exp_file)
 
         screenshot_name = f'{name_noext}_{self.version}_b.png' if save_shot else None
         hash_v2 = self.__screenshot_and_hash(screenshot_name, phash=phash)

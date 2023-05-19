@@ -1,5 +1,5 @@
 from os import remove
-from os.path import join
+from os.path import join, exists
 
 from mutater import MetaMut
 from typing import Optional, Tuple
@@ -112,5 +112,6 @@ class Fuzzer(Thread):
                  
             if self.test_html(html_file, muts, phash=True):
                 hpr.update_postq(vers, html_file, muts)
+
 
         self.stop_browsers()
