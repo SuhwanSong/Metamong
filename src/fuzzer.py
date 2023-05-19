@@ -48,7 +48,7 @@ class Fuzzer(Thread):
             raise ValueError('Unsupported browser type')
 
         for ver in vers:
-            self.br_list.append(Browser(bt, ver))
+            self.br_list.append(Browser(bt, ver, popup=True))
 
         for br in self.br_list:
             if not br.setup_browser():
@@ -105,10 +105,10 @@ class Fuzzer(Thread):
                 remove(html_file) 
                 continue
 
-            print (muts)
+            #print (muts)
             if not muts:
                 self.gen_muts(html_file, muts)
-                FileManager.write_file(html_file.replace('.html', '.js'), '\n'.join(muts))
+                #FileManager.write_file(html_file.replace('.html', '.js'), '\n'.join(muts))
                  
             if self.test_html(html_file, muts, phash=True):
                 hpr.update_postq(vers, html_file, muts)

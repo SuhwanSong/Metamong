@@ -192,7 +192,6 @@ class Browser:
         try:
             return self.browser.execute_script(scr, arg)
         except Exception as e:
-            print (scr, e)
             return None
 
     def run_html(self, html_file: str):
@@ -212,7 +211,6 @@ class Browser:
         self.run_html(html_file)
         for mut in muts: 
             self.exec_script(mut)
-            print (mut)
             time.sleep(0.1)
         self.__num_of_run += 1
         self.exec_script(f'document.close();')
@@ -260,7 +258,6 @@ class Browser:
         }
 
         for key in scripts:
-            print (scripts[key])
             dic[key] = self.exec_script(scripts[key])
             if not dic[key]: return {}
         return dic
