@@ -275,6 +275,8 @@ class Browser:
         return self.exec_script("return window.SC.is_same_state();")
 
     def metamor_test(self, html_file, muts, save_shot=False, phash=False):
+        if self.__popup:
+            self.exec_script(f"window.resizeTo({self.__width}, {self.__height});")
 
         self.run_html_for_actual(html_file, muts)
 
