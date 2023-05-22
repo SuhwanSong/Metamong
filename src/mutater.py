@@ -79,8 +79,8 @@ class MetaMut:
 
     def add_attribute(self):
         id_ = choice(self.ids)
-        attr = gen_attribute(self.hg)
-        attrn, attrv = attr.split("=")
+        attr = gen_attribute(self.hg).split("=", 1)
+        attrn, attrv = attr
         return f"window.Mut = new window.AddAttribute('{id_}', '{attrn}', {attrv});"
 
     def del_attribute(self):

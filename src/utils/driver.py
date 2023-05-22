@@ -13,6 +13,7 @@ from utils.helper import FileManager
 from utils.chrome_binary import ChromeBinary
 from utils.firefox_binary import FirefoxBinary
 
+
 GET_ATTRNAMES="""
 let attrs = [];
 const elements = document.body.querySelectorAll('*');
@@ -25,7 +26,7 @@ return attrs;
 GET_PAGE="""return window.SC.get_page();"""
 
 class Browser:
-    def __init__(self, browser_type: str, commit_version: int, flags: str = '', popup: bool = False) -> None:
+    def __init__(self, browser_type: str, commit_version: int, flags: str = '', popup: bool = False, vid_: str = '') -> None:
         environ["DBUS_SESSION_BUS_ADDRESS"] = '/dev/null'
 
         self.__width = 800
@@ -47,6 +48,7 @@ class Browser:
                 self.flags.append(flag)
 
         self.__popup = popup
+        self.__vid = vid_
 
     def __set_viewport_size(self):
         window_size = self.browser.execute_script("""
@@ -85,13 +87,14 @@ class Browser:
             try:
                 if self.__browser_type == 'chrome':
                     options = [
-                            '--headless',
+#                            '--headless',
                             '--disable-seccomp-sandbox',
                             '--disable-logging',
                             '--disable-gpu',
                             f'--window-size={self.__width},{self.__height}',
                             ]
                     options.extend(self.flags)
+                    if self.__vid: options.append(f'--display={self.__vid}')
                     option = webdriver.chrome.options.Options()
                     cb = ChromeBinary()
                     cb.ensure_chrome_binaries(browser_dir, self.version)
@@ -110,6 +113,7 @@ class Browser:
 #                            f'--width={self.__width}',
 #                            f'--height={self.__height}',
                             ]
+                    if self.__vid: options.append(f'--display={self.__vid}')
                     option = webdriver.firefox.options.Options()
                     fb = FirefoxBinary()
                     if not fb.firefox_binary_exist(browser_dir, self.version):

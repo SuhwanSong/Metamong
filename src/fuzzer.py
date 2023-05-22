@@ -11,9 +11,13 @@ from utils.driver import Browser
 from utils.helper import IOQueue
 from utils.helper import FileManager
 
+from pyvirtualdisplay import Display
+
+
 class Fuzzer(Thread):
     def __init__(self, helper: IOQueue, browser_type: str) -> None:
         super().__init__()
+
         self.br_list = []
 
         self.helper = helper
@@ -34,7 +38,7 @@ class Fuzzer(Thread):
     def get_newer_browser(self) -> Browser:
         return self.br_list[-1] if self.br_list else None
 
-    def start_browsers(self, vers: Tuple[int, int]) -> bool:
+    def start_browsers(self, vers: Tuple[int, int], vid: str = '') -> bool:
         self.stop_browsers()
 
         bt = self.__btype
@@ -48,7 +52,7 @@ class Fuzzer(Thread):
             raise ValueError('Unsupported browser type')
 
         for ver in vers:
-            self.br_list.append(Browser(bt, ver, popup=True))
+            self.br_list.append(Browser(bt, ver, popup=True, vid_=vid))
 
         for br in self.br_list:
             if not br.setup_browser():
@@ -84,34 +88,37 @@ class Fuzzer(Thread):
     def run(self) -> None:
         cur_vers = None
         hpr = self.helper
-
-        while True:
-
-            popped = hpr.pop_from_queue()
-            if not popped: break
-
-            result, vers = popped
-            html_file, muts = result
-
-            if cur_vers != vers:
-                cur_vers = vers
-                ver = cur_vers[-1]
-                if not self.start_browsers([ver]):
+        vdisplay = Display(size=(1600, 1200))
+        vdisplay.start()
+        env = vdisplay.new_display_var
+        try:
+            while True:
+                popped = hpr.pop_from_queue()
+                if not popped: break
+    
+                result, vers = popped
+                html_file, muts = result
+    
+                if cur_vers != vers:
+                    cur_vers = vers
+                    ver = cur_vers[-1]
+                    if not self.start_browsers([ver], env):
+                        continue
+    
+                # This is for eliminating non-invalidation bug.
+                br = self.get_newer_browser()
+                if self.test_wrapper(br, html_file, [], phash=True):
+                    remove(html_file) 
                     continue
+    
+                #print (muts)
+                if not muts:
+                    self.gen_muts(html_file, muts)
+                    #FileManager.write_file(html_file.replace('.html', '.js'), '\n'.join(muts))
+                     
+                if self.test_html(html_file, muts, phash=True):
+                    hpr.update_postq(vers, html_file, muts)
 
-            # This is for eliminating non-invalidation bug.
-            br = self.get_newer_browser()
-            if self.test_wrapper(br, html_file, [], phash=True):
-                remove(html_file) 
-                continue
-
-            #print (muts)
-            if not muts:
-                self.gen_muts(html_file, muts)
-                #FileManager.write_file(html_file.replace('.html', '.js'), '\n'.join(muts))
-                 
-            if self.test_html(html_file, muts, phash=True):
-                hpr.update_postq(vers, html_file, muts)
-
-
-        self.stop_browsers()
+        finally:
+            vdisplay.stop()
+            self.stop_browsers()

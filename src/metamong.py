@@ -3,7 +3,6 @@ import argparse
 
 from random import seed
 from datetime import timedelta
-from pyvirtualdisplay import Display
 
 from fuzzer import Fuzzer
 from minimizer import Minimizer
@@ -95,9 +94,6 @@ class Metamong:
 
         self.ioq = IOQueue(testcases, rev_range)
 
-        disp = Display(size=(1600, 1200))
-        disp.start()
-
         for test in self.tester: 
             self.test_wrapper(test)
 
@@ -109,7 +105,6 @@ class Metamong:
             for test in self.report: 
                 self.test_wrapper(test, True)
 
-        disp.stop()
         print (self.experiment_result)
 
 def main():
