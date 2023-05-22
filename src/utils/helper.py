@@ -434,6 +434,8 @@ class ImageDiff:
         HASHSIZE = 24
         try:
             with Image.open(stream, 'r') as image:
+                assert image.size[0] == 800
+                assert image.size[1] == 600
                 return phash(image, hash_size=HASHSIZE)
         except Exception as e:
             print (e)

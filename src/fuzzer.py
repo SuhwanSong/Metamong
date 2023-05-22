@@ -1,4 +1,4 @@
-from os import remove
+from os import remove, environ
 from os.path import join, exists
 
 from mutater import MetaMut
@@ -15,11 +15,12 @@ from pyvirtualdisplay import Display
 
 
 class Fuzzer(Thread):
-    def __init__(self, helper: IOQueue, browser_type: str) -> None:
+    def __init__(self, id_: int, helper: IOQueue, browser_type: str) -> None:
         super().__init__()
 
         self.br_list = []
 
+        self.__id = id_
         self.helper = helper
         self.__btype = browser_type
 
@@ -88,7 +89,10 @@ class Fuzzer(Thread):
     def run(self) -> None:
         cur_vers = None
         hpr = self.helper
-        vdisplay = Display(size=(1600, 1200))
+        if environ.get('DEBUG'):
+            vdisplay = Display(size=(1600, 1200), backend="xvnc", rfbport=self.__id + 5900)
+        else:
+            vdisplay = Display(size=(1600, 1200))
         vdisplay.start()
         env = vdisplay.new_display_var
         try:

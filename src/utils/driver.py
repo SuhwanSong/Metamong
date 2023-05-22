@@ -55,7 +55,7 @@ class Browser:
         return [window.outerWidth - window.innerWidth + arguments[0],
           window.outerHeight - window.innerHeight + arguments[1]];
         """, self.__width, self.__height)
-        if window_size:
+        if window_size and window_size[0] != 800 or window_size[1] != 600:
             self.browser.set_window_size(*window_size)
 
     # Due to https://github.com/mozilla/geckodriver/issues/1744, setting the
@@ -203,6 +203,7 @@ class Browser:
             self.kill_browser()
             self.setup_browser()
         try:
+            if self.__popup: self.__set_viewport_size()
             self.browser.get('file://' + abspath(html_file))
             self.__num_of_run += 1
             return True
@@ -217,9 +218,11 @@ class Browser:
         #text = FileManager.read_file(html_file)
         #self.exec_script(f'document.write(`{text}`);')
         if not self.run_html(html_file): return 
-        for mut in muts: 
+        for mut in muts:
+#            time.sleep(10)
+#            print (mut) 
             self.exec_script(mut)
-            time.sleep(0.1)
+#            time.sleep(10)
         self.__num_of_run += 1
         self.exec_script(f'document.close();')
 
@@ -228,6 +231,7 @@ class Browser:
             self.kill_browser()
             self.setup_browser()
 
+        if self.__popup: self.__set_viewport_size()
         text = FileManager.read_file(html_file)
         js = '\n;'.join(muts)
         text += '\n' + f'<script>{js}</script>'
@@ -280,9 +284,6 @@ class Browser:
         return self.exec_script("return window.SC.is_same_state();")
 
     def metamor_test(self, html_file, muts, save_shot=False, phash=False):
-        if self.__popup:
-            self.exec_script(f"window.resizeTo({self.__width}, {self.__height});")
-
         self.run_html_for_actual(html_file, muts)
 
         name_noext = splitext(html_file)[0]

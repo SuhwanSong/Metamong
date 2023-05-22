@@ -13,9 +13,9 @@ from utils.helper import IOQueue
 from utils.helper import FileManager
 
 class Minimizer(Thread):
-    def __init__(self, helper: IOQueue, browser_type: str) -> None:
+    def __init__(self, id_: int, helper: IOQueue, browser_type: str) -> None:
 
-        self.__fuzzer = Fuzzer(helper, browser_type)
+        self.__fuzzer = Fuzzer(id_, helper, browser_type)
 
         self.__min_html = None
         self.__html_file = None

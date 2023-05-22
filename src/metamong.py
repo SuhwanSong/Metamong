@@ -39,7 +39,7 @@ class Metamong:
         start = time.time()
         threads = []
         for i in range(self.num_of_threads):
-            threads.append(test_class(self.ioq, self.browser_type))
+            threads.append(test_class(i, self.ioq, self.browser_type))
             threads[-1].saveshot = report
 
         class_name = type(threads[-1]).__name__
