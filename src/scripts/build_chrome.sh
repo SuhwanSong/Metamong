@@ -1,5 +1,5 @@
 #!/bin/bash
-CUR_DIR="$( cd "$(dirname "$0")" ; pwd -P )"/..
+CUR_DIR="$( cd "$(dirname "$0")" ; pwd -P )"/../../
 CHM_DIR=$CUR_DIR/chrome/src
 TOL_DIR=$CUR_DIR/tools/
 export PATH="$PATH:$TOL_DIR/depot_tools"

@@ -330,11 +330,13 @@ def setup_for_html_generation():
     return htmlgrammar, cssgrammar
 
 def gen_html(htmlgrammar):
-    html = htmlgrammar.generate_symbol('bodyelements')
-    return '<html><body>' + html + '</body></html>'
+    return re.sub(r'[^\x00-\x7f]',r'', htmlgrammar.generate_symbol('element').replace('`', ''))
+
+def gen_attribute(htmlgrammar):
+    return re.sub(r'[^\x00-\x7f]',r'', htmlgrammar.generate_symbol('attribute').replace('`', ''))
 
 def gen_css(cssgrammar):
-    return cssgrammar.generate_symbol('rules').replace('\r','')
+    return re.sub(r'[^\x00-\x7f]',r'', cssgrammar.generate_symbol('declaration').replace('`',''))
 
 
 def generate_new_sample(template, htmlgrammar, cssgrammar, jsgrammar):
@@ -343,7 +345,6 @@ def generate_new_sample(template, htmlgrammar, cssgrammar, jsgrammar):
 
     css = cssgrammar.generate_symbol('rules')
     html = htmlgrammar.generate_symbol('bodyelements')
-
     htmlctx = {
         'htmlvars': [],
         'htmlvarctr': 0,
@@ -362,8 +363,7 @@ def generate_new_sample(template, htmlgrammar, cssgrammar, jsgrammar):
     html = html.replace('-webkit-', '')
     result = result.replace('<cssfuzzer>', css)
     result = result.replace('<htmlfuzzer>', html)
-
-    return result
+    return re.sub(r'[^\x00-\x7f]',r'', result)
 
 
 def generate_samples(grammar_dir, outfiles):
@@ -534,7 +534,7 @@ def main(index):
 
 if __name__ == '__main__':
     ps = []
-    for i in range(os.cpu_count()):
+    for i in range(20):
         p = Process(target=main, args=(i,))
         p.start()
 

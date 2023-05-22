@@ -12,17 +12,18 @@ from typing import Optional, Tuple
 from shutil import copyfile
 from collections import defaultdict
 
-from firefox_binary import build_firefox_binary
-from chrome_binary import build_chrome_binary
-from chrome_binary import get_commit_from_position
-
 from contextlib import contextmanager
 
 from PIL import Image
 from io import BytesIO
 from os import walk, listdir, getenv
 from os.path import join, dirname, abspath, exists, basename
-from chrome_binary import ChromeBinary
+
+from utils.firefox_binary import build_firefox_binary
+from utils.chrome_binary import ChromeBinary
+from utils.chrome_binary import build_chrome_binary
+from utils.chrome_binary import get_commit_from_position
+
 
 @contextmanager
 def acquire_timeout(lock, timeout):
@@ -61,6 +62,8 @@ CHROME_MILESTONE = {
     105:1027018,
     106:1036826,
     107:1047731,
+    108:1058933,
+    109:1070088,
 }
 
 FIREFOX_MILESTONE = {
@@ -139,7 +142,7 @@ class IOQueue:
         self.__download_sem.acquire()
         browser_type = 'chrome'
         parent_dir = FileManager.get_parent_dir(__file__)
-        browser_dir = join(parent_dir, browser_type)
+        browser_dir = join(dirname(parent_dir), browser_type)
         self.__download_locks[commit_version].acquire()
         cb = ChromeBinary()
         cb.ensure_chrome_binaries(browser_dir, commit_version)
@@ -150,7 +153,7 @@ class IOQueue:
         browser_type = 'chrome'
         self.__build_lock.acquire()
         parent_dir = FileManager.get_parent_dir(__file__)
-        browser_dir = join(parent_dir, browser_type)
+        browser_dir = join(dirname(parent_dir), browser_type)
         browser_path = join(browser_dir, str(commit_version), browser_type)
         if not exists(browser_path):
             build_chrome_binary(commit_version)
@@ -160,7 +163,7 @@ class IOQueue:
         browser_type = 'firefox'
         self.__build_lock.acquire()
         parent_dir = FileManager.get_parent_dir(__file__)
-        browser_dir = join(parent_dir, browser_type)
+        browser_dir = join(dirname(parent_dir), browser_type)
         browser_path = join(browser_dir, str(commit_version), browser_type)
         if not exists(browser_path):
             build_firefox_binary(commit_version)
@@ -372,10 +375,10 @@ class FileManager:
 class VersionManager:
     def __init__(self, br='chrome'):
         self.br = br
+        self.revlist = []
         if br == 'chrome':
-            self.revlist = []
             csvfile = join(
-                dirname(dirname(abspath(__file__))),
+                dirname(dirname(dirname(abspath(__file__)))),
                 'data', 
                 'bisect-builds-cache.csv')
             with open(csvfile, 'r') as fp:
@@ -384,7 +387,6 @@ class VersionManager:
                 for ver in vers:
                     v = int(ver)
                     self.revlist.append(v)
-
                 self.revlist.sort()
 
     def get_revision(self, version):

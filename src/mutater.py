@@ -1,5 +1,8 @@
-from helper import FileManager
 from random import randrange, choice, sample
+from utils.helper import FileManager
+
+from old_domato.generator import gen_html, gen_attribute, gen_css
+from old_domato.generator import setup_for_html_generation
 
 class MetaMut:
     def __init__(self):
@@ -9,25 +12,28 @@ class MetaMut:
 
         self.__tags.remove('')
 
+        self.mut_func = [
+            # DOM
+            self.add_node,
+            self.del_node,
 
-        self.mut_func = []
+            self.add_attribute,
+            self.del_attribute,
 
-        low_weight_list = [
-             self.move_node,
-             #self.tag_change,# 99 / 100
+            self.focus,
+            self.scroll,
+            self.resize,
+
+            # CSS
+            self.add_css,
+            self.del_css,
         ]
 
-        high_weight_list = [
-             self.del_node, # 100 / 100
-             self.del_attribute, # 99 / 100
-             self.del_css, # 98 / 100
-            ]
-
-        self.mut_func.extend(low_weight_list * 1)
-        self.mut_func.extend(high_weight_list * 3)
-
         self.min_num = 1
-        self.max_num = 8
+        self.max_num = 1 # 8
+
+
+        self.hg, self.cg = setup_for_html_generation()
 
     def save_state(self):
         return 'window.SC = new window.StateChecker();'
@@ -43,10 +49,11 @@ class MetaMut:
 
     def load_state(self, dic):
         self.ids = dic['ids']
+        self.full_ids = self.ids.copy()
+        self.full_ids.append("head")
+        self.full_ids.append("body")
         self.attributes = dic['attributes']
         self.css_length = dic['css_length']
-
-    # METAMORPHIC
 
     def generate(self):
         muts = []
@@ -57,29 +64,24 @@ class MetaMut:
                 muts.append(api)
             else:
                 muts.extend(api)
-            
 
         return muts
 
-
-    def tag_change(self):
+    def add_node(self):
         id_ = choice(self.ids)
-        tag = choice(self.__tags)
-        return f"window.Mut = new window.TagChange('{id_}', '{tag}');"
-
-    def add_node(self, ids, position, html):
-        pass
+        pos = choice(['beforebegin', 'afterbegin', 'beforeend', 'afterend']) 
+        html = gen_html(self.hg)
+        return f"window.Mut = new window.AddNode('{id_}', '{pos}', `{html}`);" 
 
     def del_node(self):
         id_ = choice(self.ids)
         return f"window.Mut = new window.DelNode('{id_}');"
 
-    def move_node(self):
-        id1, id2 = sample(self.ids, 2)
-        return f"window.Mut = new window.MoveNode('{id1}', '{id2}');"
-
-    # def add_attribute(self, ids):
-    #     pass
+    def add_attribute(self):
+        id_ = choice(self.ids)
+        attr = gen_attribute(self.hg)
+        attrn, attrv = attr.split("=")
+        return f"window.Mut = new window.AddAttribute('{id_}', '{attrn}', {attrv});"
 
     def del_attribute(self):
         id_ = choice(self.ids)
@@ -88,33 +90,27 @@ class MetaMut:
         attrn = choice(self.attributes[id_])
         return f"window.Mut = new window.DelAttribute('{id_}', '{attrn}');"
 
-    # def add_css(self, css):
-    #     pass
+    def add_css(self):
+        id_ = choice(self.ids)
+        decl = "{ " + gen_css(self.cg) + "; }"
+        rule = f"#{id_} {decl}"
+        return f"window.Mut = new window.AddCSS(\"{rule}\")"
 
     def del_css(self):
         target_index = randrange(self.css_length)
         return f"window.Mut = new window.DelCSS({target_index});"
 
-    # def del_css_property(self):
-    #     pass
+    def focus(self):
+        id_ = choice(self.full_ids)
+        return f"focusing('{id_}')"
 
-    def meta_scroll(self):
-        ret = []
-        id_ = choice(self.ids)
-        left = randrange(1000)
-        top = randrange(1000)
-        
-        ret.append(f"window.Mut = new MetaScroll('{id_}', {left}, {top});")
-        ret.append(f"window.Mut.restore();")
+    def scroll(self):
+        id_ = choice(self.full_ids)
+        l = randrange(1000)
+        t = randrange(1000)
+        return f"scrolling('{id_}', {l}, {t})"
 
-        return ret
-
-    def meta_wscroll(self):
-        ret = []
-        left = randrange(1000)
-        top = randrange(1000)
-        
-        ret.append(f"window.Mut = new MetaWScroll({left}, {top});")
-        ret.append(f"window.Mut.restore();")
-
-        return ret
+    def resize(self):
+        w = randrange(100, 1000)
+        h = randrange(100, 1000)
+        return f"resizing({w}, {h})"

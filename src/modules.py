@@ -27,7 +27,7 @@ from collections import defaultdict
 from mutater import MetaMut
 from multiprocessing import Process
 
-class CrossVersion(Thread):
+class SingleVersion(Thread):
     def __init__(self, helper: IOQueue, browser_type: str) -> None:
         super().__init__()
         self.br_list = []
@@ -74,38 +74,77 @@ class CrossVersion(Thread):
             br.kill_browser()
         self.br_list.clear()
 
-    def __test_wrapper(self, br, html_file: str, muts: list, phash: bool = False):
+    def test_wrapper(self, br, html_file: str, muts: list, phash: bool = False):
         thread_id = current_thread()
         self.helper.record_current_test(thread_id, br, html_file)
         is_bug = br.metamor_test(html_file, muts, save_shot=self.saveshot, phash=phash)
         self.helper.delete_record(thread_id, br, html_file)
         return is_bug
 
+    def gen_muts(self, html_file: str, muts: list):
+        br = self.get_newer_browser()
+        meta_mut = MetaMut()
+        dic = br.analyze_html(html_file)
+        if not dic: return
+        meta_mut.load_state(dic)
+        muts.extend(meta_mut.generate())
+
     def single_test_html(self, html_file: str, muts: list, phash: bool = False):
         br = self.get_newer_browser()
-        if not muts:
-            meta_mut = MetaMut()
-            dic = br.analyze_html(html_file)
-            if not dic: return
-            meta_mut.load_state(dic)
-            muts.extend(meta_mut.generate())
-
         for _ in range(self.iter_num):
-            is_bug = self.__test_wrapper(br, html_file, muts, phash=phash)
+            is_bug = self.test_wrapper(br, html_file, muts, phash=phash)
             if not is_bug: return False
-            if not muts: raise ValueError('muts is empty...')
         return True
+
+    def run(self) -> None:
+        start = time.time()
+        cur_vers = None
+        hpr = self.helper
+
+        while True:
+
+            popped = hpr.pop_from_queue()
+            if not popped: break
+
+            result, vers = popped
+            html_file, muts = result
+
+            if cur_vers != vers:
+                cur_vers = vers
+                ver = cur_vers[-1]
+                if not self.start_browsers([ver]):
+                    continue
+
+            # This is for eliminating non-invalidation bug.
+            br = self.get_newer_browser()
+            if self.test_wrapper(br, html_file, [], phash=True):
+                os.remove(html_file) 
+                continue
+
+            if not muts:
+                self.gen_muts(html_file, muts)
+                FileManager.write_file(html_file.replace('.html', '.js'), '\n'.join(muts))
+                 
+
+            if self.single_test_html(html_file, muts, phash=True):
+                hpr.update_postq(vers, html_file, muts)
+
+        self.stop_browsers()
+
+class CrossVersion(SingleVersion):
+    def __init__(self, helper: IOQueue, browser_type: str) -> None:
+        super().__init__(helper, browser_type)
 
     def cross_version_test_html(self, html_file: str, muts: list) -> bool:
         thread_id = current_thread()
         br1, br2 = self.br_list
 
         for _ in range(self.iter_num):
-            br1_bug = self.__test_wrapper(br1, html_file, muts, phash=True)
+            br1_bug = self.test_wrapper(br1, html_file, muts, phash=True)
             if br1_bug is None: return
             elif br1_bug: return False
 
-            br2_bug = self.__test_wrapper(br2, html_file, muts, phash=True)
+            br2_bug = self.test_wrapper(br2, html_file, muts, phash=True)
             if br2_bug is None: return
 
         return not br1_bug and br2_bug
@@ -126,15 +165,6 @@ class CrossVersion(Thread):
             if cur_vers != vers:
                 cur_vers = vers
                 if not self.start_browsers(cur_vers):
-                    continue
-
-            if not self.report_mode:
-                if not self.single_test_html(html_file, muts, phash=True):
-                    continue
-
-                # This is for eliminating non-invalidation bug.
-                br = self.get_newer_browser()
-                if self.__test_wrapper(br, html_file, [], phash=True):
                     continue
 
             if not self.cross_version_test_html(html_file, muts):
@@ -499,7 +529,6 @@ class Minimizer(CrossVersion):
 
         self.stop_browsers()
 
-
 class Metamong:
     def __init__(self, input_dir: str, output_dir: str, num_of_threads: int,
                  browser_type:str, base_version: int, target_version: int) -> None:
@@ -513,9 +542,10 @@ class Metamong:
 
         self.experiment_result = {}
         self.tester = [
+            SingleVersion,
             CrossVersion,
-            Bisecter,
             Minimizer,
+            Bisecter,
         ]
         self.report = [
             CrossVersion,
@@ -604,3 +634,17 @@ class Metamong:
         disp.stop()
         print (self.experiment_result)
 
+
+class Tester(Metamong):
+    def __init__(self, input_dir: str, output_dir: str, num_of_threads: int,
+                 browser_type:str, base_version: int, target_version: int) -> None:
+
+        super().__init__(input_dir, output_dir, num_of_threads,
+                         browser_type, base_version, target_version)
+        self.tester = [
+            SingleVersion,
+            Minimizer
+        ]
+        self.report = [
+            SingleVersion
+        ]
