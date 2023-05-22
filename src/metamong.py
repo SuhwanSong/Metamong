@@ -82,7 +82,7 @@ class Metamong:
         start = time.time()
 
         self.vm = VersionManager(self.browser_type)
-        testcases = FileManager.get_all_files(self.in_dir, '.html')
+        testcases = FileManager.get_all_files(self.in_dir, '.html', 'expected.html')
         rev_range = self.vm.get_rev_range(self.base_ver, self.target_ver)
 
 

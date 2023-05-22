@@ -108,7 +108,7 @@ class Fuzzer(Thread):
                 # This is for eliminating non-invalidation bug.
                 br = self.get_newer_browser()
                 if self.test_wrapper(br, html_file, [], phash=True):
-                    remove(html_file) 
+                    #remove(html_file) 
                     continue
     
                 #print (muts)

@@ -345,11 +345,14 @@ class IOQueue:
         return left
 
 class FileManager:
-    def get_all_files(root, ext=None) -> list:
+    def get_all_files(root, ext='', exclude='') -> list:
         paths = []
         for path, subdirs, files in walk(root):
             for name in files:
-                if ext is not None and ext not in name:
+                if ext and ext not in name:
+                    continue
+
+                if exclude and exclude in name:
                     continue
                 paths.append((join(path, name)))
         return paths
