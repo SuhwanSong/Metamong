@@ -55,8 +55,10 @@ class Browser:
         return [window.outerWidth - window.innerWidth + arguments[0],
           window.outerHeight - window.innerHeight + arguments[1]];
         """, self.__width, self.__height)
-        if window_size and window_size[0] != 800 or window_size[1] != 600:
-            self.browser.set_window_size(*window_size)
+
+        if window_size is None: return
+        elif window_size[0] == 800 and window_size[1] == 600: return
+        else: self.browser.set_window_size(*window_size)
 
     # Due to https://github.com/mozilla/geckodriver/issues/1744, setting the
     # width/height of firefox includes some browser UI. This workaround is
