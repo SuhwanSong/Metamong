@@ -80,11 +80,12 @@ class Browser:
         if not exists(browser_dir):
             Path(browser_dir).mkdir(parents=True, exist_ok=True)
 
+
         for _ in range(5):
             try:
                 if self.__browser_type == 'chrome':
                     options = [
-#                            '--headless',
+                            '--headless',
                             '--disable-seccomp-sandbox',
                             '--disable-logging',
                             '--disable-gpu',
@@ -96,7 +97,6 @@ class Browser:
                     cb.ensure_chrome_binaries(browser_dir, self.version)
 
                     browser_path = cb.get_browser_path(browser_dir, self.version)
-                    print (browser_path)
                     option.binary_location = browser_path
                     for op in options: option.add_argument(op)
 
@@ -198,8 +198,12 @@ class Browser:
         if self.__num_of_run == 1000:
             self.kill_browser()
             self.setup_browser()
-        self.browser.get('file://' + abspath(html_file))
-        self.__num_of_run += 1
+        try:
+            self.browser.get('file://' + abspath(html_file))
+            self.__num_of_run += 1
+            return True
+        except Exception as e:
+            return False
 
     def run_html_for_actual(self, html_file: str, muts: list):
         if self.__num_of_run == 1000:
@@ -208,7 +212,7 @@ class Browser:
 
         #text = FileManager.read_file(html_file)
         #self.exec_script(f'document.write(`{text}`);')
-        self.run_html(html_file)
+        if not self.run_html(html_file): return 
         for mut in muts: 
             self.exec_script(mut)
             time.sleep(0.1)
@@ -250,7 +254,7 @@ class Browser:
 
     def analyze_html(self, html_file):
         dic = {}
-        self.run_html(html_file)
+        if not self.run_html(html_file): return 
 
         scripts = {'ids': 'return get_all_ids();',
                    'attributes': 'return get_all_attributes();',

@@ -142,7 +142,7 @@ class IOQueue:
         self.__download_sem.acquire()
         browser_type = 'chrome'
         parent_dir = FileManager.get_parent_dir(__file__)
-        browser_dir = join(parent_dir, browser_type)
+        browser_dir = join(dirname(parent_dir), browser_type)
         self.__download_locks[commit_version].acquire()
         cb = ChromeBinary()
         cb.ensure_chrome_binaries(browser_dir, commit_version)
@@ -153,7 +153,7 @@ class IOQueue:
         browser_type = 'chrome'
         self.__build_lock.acquire()
         parent_dir = FileManager.get_parent_dir(__file__)
-        browser_dir = join(parent_dir, browser_type)
+        browser_dir = join(dirname(parent_dir), browser_type)
         browser_path = join(browser_dir, str(commit_version), browser_type)
         if not exists(browser_path):
             build_chrome_binary(commit_version)
@@ -163,7 +163,7 @@ class IOQueue:
         browser_type = 'firefox'
         self.__build_lock.acquire()
         parent_dir = FileManager.get_parent_dir(__file__)
-        browser_dir = join(parent_dir, browser_type)
+        browser_dir = join(dirname(parent_dir), browser_type)
         browser_path = join(browser_dir, str(commit_version), browser_type)
         if not exists(browser_path):
             build_firefox_binary(commit_version)
