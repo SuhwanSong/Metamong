@@ -219,7 +219,7 @@ class Browser:
 
         #text = FileManager.read_file(html_file)
         #self.exec_script(f'document.write(`{text}`);')
-        if not self.run_html(html_file): return 
+        if not self.run_html(html_file): return False
         for mut in muts:
 #            time.sleep(10)
 #            print (mut) 
@@ -227,13 +227,16 @@ class Browser:
 #            time.sleep(10)
         self.__num_of_run += 1
         self.exec_script(f'document.close();')
+        return True
 
     def run_html_for_expect(self, html_file: str, muts: list, name=''):
         if self.__num_of_run == 1000:
             self.kill_browser()
             self.setup_browser()
 
-        if self.__popup: self.__set_viewport_size()
+        if self.__popup: 
+            try: self.__set_viewport_size()
+            except Exception as e: return False
         text = FileManager.read_file(html_file)
         js = '\n;'.join(muts)
         text += '\n' + f'<script>{js}</script>'
@@ -244,6 +247,7 @@ class Browser:
             self.exec_script(f'document.write(`{text}`);')
             self.exec_script(f'document.close();')
         self.__num_of_run += 1
+        return True
 
     def get_screenshot(self, name: str = ''):
         for attempt in range(5):
@@ -286,7 +290,7 @@ class Browser:
         return self.exec_script("return window.SC.is_same_state();")
 
     def metamor_test(self, html_file, muts, save_shot=False, phash=False):
-        self.run_html_for_actual(html_file, muts)
+        if not self.run_html_for_actual(html_file, muts): return 
 
         name_noext = splitext(html_file)[0]
         screenshot_name = f'{name_noext}_{self.version}_a.png' if save_shot else None
@@ -294,7 +298,7 @@ class Browser:
         if not hash_v1: return
 
         exp_file = html_file.replace('.html', '_expected.html')
-        self.run_html_for_expect(html_file, muts, exp_file)
+        if not self.run_html_for_expect(html_file, muts, exp_file): return 
 
         screenshot_name = f'{name_noext}_{self.version}_b.png' if save_shot else None
         hash_v2 = self.__screenshot_and_hash(screenshot_name, phash=phash)
