@@ -308,4 +308,7 @@ class Browser:
         hash_v2 = self.__screenshot_and_hash(screenshot_name, phash=phash)
         if not hash_v2: return
 
-        return ImageDiff.diff_images(hash_v1, hash_v2, phash=phash)
+        # size is different
+        if hash_v1[1] != hash_v2[1]: return
+
+        return ImageDiff.diff_images(hash_v1[0], hash_v2[0], phash=phash)
