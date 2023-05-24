@@ -127,7 +127,6 @@ class Browser:
                     for op in options: option.add_argument(op)
 
                     driver_path = fb.get_driver_path(browser_dir, self.version)
-                    print (driver_path)
                     self.browser = webdriver.Firefox(options=option,
                             executable_path=driver_path)
                 else:
@@ -136,7 +135,7 @@ class Browser:
                 break
 
             except Exception as e:
-                print (e)
+                print (e, 'here')
                 time.sleep(0.2)
                 continue
 
@@ -150,21 +149,23 @@ class Browser:
         self.browser.set_page_load_timeout(TIMEOUT)
         self.browser.implicitly_wait(TIMEOUT)
 
-        if self.__popup:
-            self.exec_script(f'window.open("", "", {self.__width}, {self.__height})')
-            self.browser.switch_to.window(self.browser.window_handles[1])
-        else:
-            for _ in range(5):
-                try:
-                    platform = sys.platform
-                    platform_funcs = {'linux': self.__set_viewport_size,
-                                      'darwin': self.__adjust_viewport_size, }
-                    platform_funcs[platform]()
-                    break
-                except Exception as e:
-                    print (e)
-                    continue
-        return True
+        setup_complete = False
+        for _ in range(5):
+            try:
+                if self.__popup:
+                    self.exec_script(f'window.open("", "", {self.__width}, {self.__height})')
+                    self.browser.switch_to.window(self.browser.window_handles[1])
+                platform = sys.platform
+                platform_funcs = {'linux': self.__set_viewport_size,
+                                  'darwin': self.__adjust_viewport_size, }
+                platform_funcs[platform]()
+                setup_complete = True
+                break
+            except Exception as e:
+                print (e)
+                continue
+
+        return setup_complete
 
     def kill_browser(self):
         if self.browser and self.browser.session_id:
@@ -177,8 +178,7 @@ class Browser:
         return True
 
     def kill_browser_by_pid(self):
-        if not self.browser or self.__browser_type == 'firefox':
-            return False
+        if not self.browser: return False
         br = self.browser
         if not br.session_id or not br.service or not br.service.process:
             return False
@@ -290,6 +290,10 @@ class Browser:
         return self.exec_script("return window.SC.is_same_state();")
 
     def metamor_test(self, html_file, muts, save_shot=False, phash=False):
+        if self.exec_script("return document.location.href") is None:
+            self.kill_browser_by_pid()
+            self.setup_browser()
+
         if not self.run_html_for_actual(html_file, muts): return 
 
         name_noext = splitext(html_file)[0]
@@ -304,4 +308,7 @@ class Browser:
         hash_v2 = self.__screenshot_and_hash(screenshot_name, phash=phash)
         if not hash_v2: return
 
-        return ImageDiff.diff_images(hash_v1, hash_v2, phash=phash)
+        # size is different
+        if hash_v1[1] != hash_v2[1]: return
+
+        return ImageDiff.diff_images(hash_v1[0], hash_v2[0], phash=phash)

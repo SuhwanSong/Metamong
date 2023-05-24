@@ -425,20 +425,18 @@ class ImageDiff:
         try:
             with Image.open(stream, 'r') as image:
                 pixel = np.asarray(image)
-                return hashlib.sha1(pixel).hexdigest()
+                return hashlib.sha1(pixel).hexdigest(), image.size
         except Exception as e:
-            print (e)
+            print ('get_hash', e)
 
     def get_phash(png):
         stream = png if isinstance(png, str) else BytesIO(png)
         HASHSIZE = 24
         try:
             with Image.open(stream, 'r') as image:
-                assert image.size[0] == 800
-                assert image.size[1] == 600
-                return phash(image, hash_size=HASHSIZE)
+                return phash(image, hash_size=HASHSIZE), image.size
         except Exception as e:
-            print (e)
+            print ('get_phash', e)
 
     def diff_images(hash_A, hash_B, phash=False):
         if phash:
@@ -454,5 +452,5 @@ class ImageDiff:
             im.save(name)
             im.close()
         except Exception as e:
-            print (e)
+            print ('save_image', e)
 
