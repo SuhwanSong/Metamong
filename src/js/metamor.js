@@ -78,11 +78,13 @@ function get_focus_node() {
     return document.activeElement.outerHTML;
 }
 
-function get_scroll_positions(allElements) {
-    let positions = ["{0}:{1}".format(window.scrollX, window.scrollY)];
+function get_scroll_positions() {
+    let positions = [`${window.scrollX},${window.scrollY}`];
+
+    let allElements = get_elements();
     for (let i = 0; i < allElements.length; i++) {
         let ele = allElements[i];
-        positions.push("{0}:{1}".format(ele.scrollTop, ele.scrollLeft));
+        positions.push(`${ele.scrollTop},${ele.scrollLeft}`);
     }
     return positions.join('\n');
 }
