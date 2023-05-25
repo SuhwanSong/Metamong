@@ -4,6 +4,8 @@ from utils.helper import FileManager
 from old_domato.generator import gen_html, gen_attribute, gen_css
 from old_domato.generator import setup_for_html_generation
 
+from os import environ
+
 class MetaMut:
     def __init__(self):
         self.__tags = []
@@ -35,6 +37,10 @@ class MetaMut:
 
         self.hg, self.cg = setup_for_html_generation()
 
+        self.mut_num = environ.get('MUTATION')
+
+        
+
     def save_state(self):
         return 'window.SC = new window.StateChecker();'
 
@@ -59,12 +65,10 @@ class MetaMut:
         muts = []
         num_of_func = randrange(self.min_num, self.max_num + 1)
         for _ in range(num_of_func):
-            api = choice(self.mut_func)()
-            if isinstance(api, str):
-                muts.append(api)
-            else:
-                muts.extend(api)
+            if self.mut_num: api = self.mut_func[int(self.mut_num)]() 
+            else: api = choice(self.mut_func)()
 
+            muts.append(api) if isinstance(api, str) else muts.extend(api)
         return muts
 
     def add_node(self):

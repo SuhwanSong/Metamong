@@ -54,6 +54,43 @@ function get_attribute() {
     return attr;
 }
 
+function get_dom_tree() {
+    return document.body.outerHTML;
+}
+
+function get_css_rules() {
+    if (!document.styleSheets) return '';
+
+    let styleSheet = document.styleSheets[0];
+    if (!styleSheet || !styleSheet.cssRules) return '';
+
+    let css_r = [];
+    let css_rules = styleSheet.cssRules;
+
+    for (let i = 0; i < css_rules.length; i++) {
+        css_r.push(css_rules[i].cssText);
+    }
+    return css_r.join('\n');
+}
+
+
+function get_focus_node() {
+    return document.activeElement.outerHTML;
+}
+
+function get_scroll_positions(allElements) {
+    let positions = ["{0}:{1}".format(window.scrollX, window.scrollY)];
+    for (let i = 0; i < allElements.length; i++) {
+        let ele = allElements[i];
+        positions.push("{0}:{1}".format(ele.scrollTop, ele.scrollLeft));
+    }
+    return positions.join('\n');
+}
+
+function get_animations() {
+    return document.getAnimations().length;
+}
+
 /* rendering checker */
 window.StateChecker = class StateChecker {
     constructor() {

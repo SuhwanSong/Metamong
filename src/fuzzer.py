@@ -28,13 +28,20 @@ class Fuzzer(Thread):
         self.saveshot = False
         self.iter_num = 4
 
+        self.__cross_version = False
+
         self.meta_mut = MetaMut()
 
+    def cross_version_mode(self) -> None:
+        self.__cross_version = True
 
     def report_mode(self) -> None:
         self.report_mode = True
         self.saveshot = True
         self.iter_num = 1
+
+    def get_older_browser(self) -> Browser:
+        return self.br_list[0] if self.br_list else None
 
     def get_newer_browser(self) -> Browser:
         return self.br_list[-1] if self.br_list else None
@@ -83,7 +90,17 @@ class Fuzzer(Thread):
         br = self.get_newer_browser()
         for _ in range(self.iter_num):
             is_bug = self.test_wrapper(br, html_file, muts, phash=phash)
-            if not is_bug: return False
+            if is_bug is None or not is_bug: return False
+
+        # if not cross_version test mode, return true
+        if not self.__cross_version: return True
+
+        # cross-version test, old one should not have a bug, using hash
+        old_br = self.get_older_browser()
+        for _ in range(self.iter_num):
+            is_bug = self.test_wrapper(old_br, html_file, muts)
+            if is_bug is None or is_bug: return False
+
         return True
 
     def run(self) -> None:

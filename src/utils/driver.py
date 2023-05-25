@@ -226,7 +226,7 @@ class Browser:
             self.exec_script(mut)
 #            time.sleep(10)
         self.__num_of_run += 1
-        self.exec_script(f'document.close();')
+        #self.exec_script(f'document.close();')
         return True
 
     def run_html_for_expect(self, html_file: str, muts: list, name=''):
@@ -289,17 +289,43 @@ class Browser:
     def __is_same_state(self):
         return self.exec_script("return window.SC.is_same_state();")
 
+    def __get_all_state(self):
+        state = {}
+        try:
+            state["dom"] = self.exec_script("return get_dom_tree();")
+            state["css"] = self.exec_script("return get_css_rules();")
+            state["focus"] = self.exec_script("return get_focus_node();")
+            state["scroll"] = self.exec_script("return get_scroll_position();")
+            state["animation"] = self.exec_script("return get_animations();")
+            return state
+        except Exception as e:
+            return {}
+
+    def __state_compare(self, s1, s2):
+        if s1["dom"] != s2["dom"]: return False
+        elif s1["css"] != s2["css"]: return False
+        elif s1["focus"] != s2["focus"]: return False
+        elif s1["scroll"] != s2["scroll"]: return False
+        elif s1["animation"] != s2["animation"]: return False
+        else: return True
+
+
+
     def metamor_test(self, html_file, muts, save_shot=False, phash=False):
         if self.exec_script("return document.location.href") is None:
             self.kill_browser_by_pid()
             self.setup_browser()
 
-        if not self.run_html_for_actual(html_file, muts): return 
+        if not self.run_html_for_actual(html_file, muts): return
 
         name_noext = splitext(html_file)[0]
         screenshot_name = f'{name_noext}_{self.version}_a.png' if save_shot else None
         hash_v1 = self.__screenshot_and_hash(screenshot_name, phash=phash)
         if not hash_v1: return
+
+        # save state
+        actual_state = self.__get_all_state()
+        if not actual_state: return
 
         exp_file = html_file.replace('.html', '_expected.html')
         if not self.run_html_for_expect(html_file, muts, exp_file): return 
@@ -307,6 +333,11 @@ class Browser:
         screenshot_name = f'{name_noext}_{self.version}_b.png' if save_shot else None
         hash_v2 = self.__screenshot_and_hash(screenshot_name, phash=phash)
         if not hash_v2: return
+
+        expected_state = self.__get_all_state()
+        if not expected_state: return
+
+        if not self.__state_compare(actual_state, expected_state): return
 
         # size is different
         if hash_v1[1] != hash_v2[1]: return
