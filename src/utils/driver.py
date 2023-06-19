@@ -162,7 +162,7 @@ class Browser:
                 setup_complete = True
                 break
             except Exception as e:
-                print (e)
+                print ('setup', e)
                 continue
 
         return setup_complete
@@ -221,10 +221,8 @@ class Browser:
         #self.exec_script(f'document.write(`{text}`);')
         if not self.run_html(html_file): return False
         for mut in muts:
-#            time.sleep(10)
-#            print (mut) 
             self.exec_script(mut)
-#            time.sleep(10)
+            time.sleep(0.5)
         self.__num_of_run += 1
         #self.exec_script(f'document.close();')
         return True

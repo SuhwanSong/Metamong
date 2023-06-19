@@ -39,18 +39,17 @@ def test(html_dir):
     disp = Display(size=(1600, 1200))
     disp.start()
     use_popup = True
-    if "popup" in json_object:
-        use_popup = json_object["popup"]
-
+    if "nopopup" in json_object:
+        use_popup = False
     b = Browser(browser_type, version, popup=use_popup)
     b.setup_browser()
 
+    print (version, poc_file)
     b.run_html_for_actual(poc_file, muts) 
-    time.sleep(10)
 
     poc_png = poc_file.replace('.html', '.png')
     b.get_screenshot(poc_png)
-    poc_hash = ImageDiff.get_phash(poc_png)
+    poc_hash, _ = ImageDiff.get_phash(poc_png)
     b.kill_browser()
     
     b = Browser(browser_type, version, popup=use_popup)
@@ -59,14 +58,29 @@ def test(html_dir):
     b.run_html_for_expect(poc_file, muts, exp_file)
     exp_png = exp_file.replace('.html', '.png')
     b.get_screenshot(exp_png)
-    exp_hash = ImageDiff.get_phash(exp_png)
+    exp_hash, _ = ImageDiff.get_phash(exp_png)
 
+    is_bug = False
     if ImageDiff.diff_images(poc_hash, exp_hash, phash=True):
         print ('Oracle detects the bug')
+        is_bug = True
+
     else: 
         print ('Oracle fails...')
 
     b.kill_browser()
     disp.stop()
+    return is_bug
 
-test(sys.argv[1])
+
+if __name__ == "__main__":
+    url = sys.argv[1]
+    num = 0
+    bug = 0
+    for directory in sorted(os.listdir(url)): 
+        path = os.path.join(url, directory)
+        if not os.path.isdir(path): continue
+        print (path)
+        num += 1
+        if test(path): bug += 1
+    print (f'bug: {bug}, num: {num}') 
