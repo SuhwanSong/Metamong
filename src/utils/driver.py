@@ -221,10 +221,8 @@ class Browser:
         #self.exec_script(f'document.write(`{text}`);')
         if not self.run_html(html_file): return False
         for mut in muts:
-#            time.sleep(10)
-#            print (mut) 
             self.exec_script(mut)
-#            time.sleep(10)
+            time.sleep(0.5)
         self.__num_of_run += 1
         #self.exec_script(f'document.close();')
         return True
@@ -305,7 +303,6 @@ class Browser:
     def __state_compare(self, s1, s2):
         for key in s1:
             if s1[key] != s2[key]:
-                print (key, s1[key], s2[key])
                 return False
         return True
 
