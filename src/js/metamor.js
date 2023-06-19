@@ -75,7 +75,7 @@ function get_css_rules() {
 
 
 function get_focus_node() {
-    return document.activeElement.outerHTML;
+    return document.activeElement.id;
 }
 
 function get_scroll_positions() {
@@ -84,7 +84,8 @@ function get_scroll_positions() {
     let allElements = get_elements();
     for (let i = 0; i < allElements.length; i++) {
         let ele = allElements[i];
-        positions.push(`${ele.scrollTop},${ele.scrollLeft}`);
+        if (ele.scrollTop && ele.scrollLeft)
+          positions.push(`${ele.scrollTop},${ele.scrollLeft}`);
     }
     return positions.join('\n');
 }

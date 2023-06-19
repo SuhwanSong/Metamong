@@ -113,6 +113,7 @@ class IOQueue:
         self.__postqs = defaultdict(Queue)
         self.__vers = None
 
+        self.num_of_valid_tests = 0
         self.num_of_tests = 0
         self.num_of_inputs = 0
         self.num_of_outputs = 0
@@ -174,6 +175,8 @@ class IOQueue:
         key =  choice(keys) if keys else None
         return key
 
+    def count_valid_test(self) -> None:
+        self.num_of_valid_tests += 1
 
     def insert_to_queue(self, vers: Tuple[int, int, int], html_file: str, muts: list) -> None:
         with acquire_timeout(self.__queue_lock, -1) as acquired:
@@ -205,7 +208,7 @@ class IOQueue:
             if self.num_of_tests % 100 == 0:
                 tt = round((time.time() - self.start_time) / 60, 3)
                 ot = round(self.num_of_tests / tt, 3)
-                printf('BLUE', f'test: {self.num_of_tests}, outputs: {self.num_of_outputs}, time: {tt}, test / time: {ot}')
+                printf('BLUE', f'test: {self.num_of_tests}, outputs: {self.num_of_outputs}, time: {tt}, test / time: {ot}, valid: {self.num_of_valid_tests}')
             return value, vers
 
     def get_vers(self) -> Optional[Tuple[int, int, int]]:
@@ -320,19 +323,15 @@ class IOQueue:
             self.monitor.pop((thread_id, br.version, html_file), None)
 
     def monitoring(self):
-        brs = []
         with acquire_timeout(self.__queue_lock, 1000) as acquired:
             if not acquired: return
 
             cur_time = time.time()
             for cur_test in self.monitor:
                 br, t = self.monitor[cur_test]
-                if cur_time - t > 30:
+                if cur_time - t > 60:
                     printf ('WARNING', f'{cur_test[1]} in thread {cur_test[0].ident} is hanging ... {cur_test[2]}')
-                    brs.append(br)
-
-        for br in brs:
-            br.kill_browser_by_pid()
+                    br.kill_browser_by_pid()
 
 
     def left(self):

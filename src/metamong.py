@@ -8,6 +8,8 @@ from fuzzer import Fuzzer
 from minimizer import Minimizer
 
 from os.path import join, dirname, basename
+from os import environ, _exit
+
 
 from utils.helper import FileManager, VersionManager, IOQueue
 
@@ -63,6 +65,14 @@ class Metamong:
             if alive < num_th:
                 left = self.ioq.left()
                 print (f'{alive} of {num_th} Threads are alive, {left} inputs are left...')
+                if left == 0:
+                    for th in threads:
+                        if not th.is_alive(): continue
+                        for br in th.br_list:
+                            br.kill_browser_by_pid()
+                    time.sleep(10)
+                    break
+
 
         self.ioq.reset_lock()
         elapsed = time.time() - start
@@ -80,11 +90,13 @@ class Metamong:
 
     def process(self) -> None:
         start = time.time()
-
-        self.vm = VersionManager(self.browser_type)
         testcases = FileManager.get_all_files(self.in_dir, '.html', 'expected.html')
-        rev_range = self.vm.get_rev_range(self.base_ver, self.target_ver)
 
+        if self.browser_type == 'chrome':
+            self.vm = VersionManager(self.browser_type)
+            rev_range = self.vm.get_rev_range(self.base_ver, self.target_ver)
+        elif self.browser_type == 'firefox':
+            rev_range = [self.base_ver, self.target_ver]
 
         num_of_tests = len(testcases)
         rev_a = rev_range[0]
@@ -106,6 +118,8 @@ class Metamong:
                 self.test_wrapper(test, True)
 
         print (self.experiment_result)
+        _exit(0) 
+        
 
 def main():
     parser = argparse.ArgumentParser(description='Usage')
@@ -118,7 +132,7 @@ def main():
     parser.add_argument('--nomin', action='store_true',    help='No minimization')
     args = parser.parse_args()
 
-    seed(0)
+    seed(int(environ.get("SEED", "0")))
 
     m = Metamong(args.input, args.output, args.job, args.type, args.pre, args.new)
     if args.nomin:

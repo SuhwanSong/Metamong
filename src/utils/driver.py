@@ -162,7 +162,7 @@ class Browser:
                 setup_complete = True
                 break
             except Exception as e:
-                print ('setup', e)
+                print (e)
                 continue
 
         return setup_complete
@@ -221,8 +221,10 @@ class Browser:
         #self.exec_script(f'document.write(`{text}`);')
         if not self.run_html(html_file): return False
         for mut in muts:
+#            time.sleep(10)
+#            print (mut) 
             self.exec_script(mut)
-            time.sleep(0.5)
+#            time.sleep(10)
         self.__num_of_run += 1
         #self.exec_script(f'document.close();')
         return True
@@ -290,24 +292,22 @@ class Browser:
     def __get_all_state(self):
         state = {}
         try:
-            state["dom"] = self.exec_script("return get_dom_tree();")
-            state["css"] = self.exec_script("return get_css_rules();")
+            #state["dom"] = self.exec_script("return get_dom_tree();")
+            #state["css"] = self.exec_script("return get_css_rules();")
             state["focus"] = self.exec_script("return get_focus_node();")
             state["scroll"] = self.exec_script("return get_scroll_position();")
             state["animation"] = self.exec_script("return get_animations();")
             return state
         except Exception as e:
+            print (e)
             return {}
 
     def __state_compare(self, s1, s2):
-        if s1["dom"] != s2["dom"]: return False
-        elif s1["css"] != s2["css"]: return False
-        elif s1["focus"] != s2["focus"]: return False
-        elif s1["scroll"] != s2["scroll"]: return False
-        elif s1["animation"] != s2["animation"]: return False
-        else: return True
-
-
+        for key in s1:
+            if s1[key] != s2[key]:
+                print (key, s1[key], s2[key])
+                return False
+        return True
 
     def metamor_test(self, html_file, muts, save_shot=False, phash=False):
         if self.exec_script("return document.location.href") is None:

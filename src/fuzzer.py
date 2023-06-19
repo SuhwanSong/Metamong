@@ -1,18 +1,17 @@
-from os import remove, environ
+from os import remove, environ, kill
 from os.path import join, exists
 
 from mutater import MetaMut
 from typing import Optional, Tuple
 
 from threading import Thread
-from threading import current_thread
+from threading import current_thread, get_native_id
 
 from utils.driver import Browser
 from utils.helper import IOQueue
 from utils.helper import FileManager
 
 from pyvirtualdisplay import Display
-
 
 class Fuzzer(Thread):
     def __init__(self, id_: int, helper: IOQueue, browser_type: str) -> None:
@@ -72,7 +71,7 @@ class Fuzzer(Thread):
             br.kill_browser()
         self.br_list.clear()
 
-    def test_wrapper(self, br, html_file: str, muts: list, phash: bool = False):
+    def __test_wrapper(self, br, html_file: str, muts: list, phash: bool = False):
         thread_id = current_thread()
         self.helper.record_current_test(thread_id, br, html_file)
         is_bug = br.metamor_test(html_file, muts, save_shot=self.saveshot, phash=phash)
@@ -89,7 +88,8 @@ class Fuzzer(Thread):
     def test_html(self, html_file: str, muts: list, phash: bool = False):
         br = self.get_newer_browser()
         for _ in range(self.iter_num):
-            is_bug = self.test_wrapper(br, html_file, muts, phash=phash)
+            is_bug = self.__test_wrapper(br, html_file, muts, phash=phash)
+            if is_bug is not None: self.helper.count_valid_test()
             if is_bug is None or not is_bug: return False
 
         # if not cross_version test mode, return true
@@ -98,12 +98,13 @@ class Fuzzer(Thread):
         # cross-version test, old one should not have a bug, using hash
         old_br = self.get_older_browser()
         for _ in range(self.iter_num):
-            is_bug = self.test_wrapper(old_br, html_file, muts)
+            is_bug = self.__test_wrapper(old_br, html_file, muts)
             if is_bug is None or is_bug: return False
 
         return True
 
     def run(self) -> None:
+
         cur_vers = None
         hpr = self.helper
         if environ.get('DEBUG'):
@@ -128,11 +129,9 @@ class Fuzzer(Thread):
     
                 # This is for eliminating non-invalidation bug.
                 br = self.get_newer_browser()
-                if self.test_wrapper(br, html_file, [], phash=True):
-                    #remove(html_file) 
+                if self.__test_wrapper(br, html_file, [], phash=True):
                     continue
     
-                #print (muts)
                 if not muts:
                     self.gen_muts(html_file, muts)
                     #FileManager.write_file(html_file.replace('.html', '.js'), '\n'.join(muts))
