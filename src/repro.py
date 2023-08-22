@@ -41,34 +41,37 @@ def test(html_dir):
     use_popup = True
     if "nopopup" in json_object:
         use_popup = False
-    b = Browser(browser_type, version, popup=use_popup)
-    b.setup_browser()
-
-    b.run_html_for_actual(poc_file, muts)
-
-    poc_png = poc_file.replace('.html', '.png')
-    b.get_screenshot(poc_png)
-    poc_hash, _ = ImageDiff.get_phash(poc_png)
-    b.kill_browser()
-
-    b = Browser(browser_type, version, popup=use_popup)
-    b.setup_browser()
-    #b.run_html(exp_file)
-    b.run_html_for_expect(poc_file, muts, exp_file)
-    exp_png = exp_file.replace('.html', '.png')
-    b.get_screenshot(exp_png)
-    exp_hash, _ = ImageDiff.get_phash(exp_png)
 
     is_bug = False
+    for _ in range(3):
+        b = Browser(browser_type, version, popup=use_popup)
+        b.setup_browser()
 
-    if ImageDiff.diff_images(poc_hash, exp_hash, phash=True):
-        print ('Oracle detects the bug, poc:', poc_file)
-        is_bug = True
+        b.run_html_for_actual(poc_file, muts)
 
-    else: 
+        poc_png = poc_file.replace('.html', '.png')
+        b.get_screenshot(poc_png)
+        poc_hash, _ = ImageDiff.get_phash(poc_png)
+        b.kill_browser()
+
+        b = Browser(browser_type, version, popup=use_popup)
+        b.setup_browser()
+        #b.run_html(exp_file)
+        b.run_html_for_expect(poc_file, muts, exp_file)
+        exp_png = exp_file.replace('.html', '.png')
+        b.get_screenshot(exp_png)
+        exp_hash, _ = ImageDiff.get_phash(exp_png)
+
+        if ImageDiff.diff_images(poc_hash, exp_hash, phash=True):
+            print ('Oracle detects the bug, poc:', poc_file)
+            is_bug = True
+            break
+
+        b.kill_browser()
+
+    if not is_bug:
         print ('Oracle fails..., poc:', poc_file)
 
-    b.kill_browser()
     disp.stop()
     return is_bug
 
@@ -80,7 +83,6 @@ if __name__ == "__main__":
     for directory in sorted(os.listdir(url)):
         path = os.path.join(url, directory)
         if not os.path.isdir(path): continue
-        #print (path)
         num += 1
         if test(path): 
             bug += 1

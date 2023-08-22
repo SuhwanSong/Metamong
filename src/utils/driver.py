@@ -111,7 +111,7 @@ class Browser:
                 elif self.__browser_type == 'firefox':
                     options = [
 #                            '--headless',
-#                            '--disable-gpu',
+                            '--disable-gpu',
 #                            f'--width={self.__width}',
 #                            f'--height={self.__height}',
                             ]

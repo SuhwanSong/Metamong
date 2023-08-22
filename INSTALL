@@ -1,0 +1,7 @@
+## Setup
+- You need to install the dependencies of Metamong and then download target browsers with their drivers.
+- Each driver should be placed in the same directory of browser binary.
+- The bash file `setup.sh` will install all of dependencies and download the browsers.
+```shell
+$ ./setup.sh
+```

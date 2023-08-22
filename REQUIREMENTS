@@ -1,0 +1,5 @@
+- OS: Ubuntu 20.04 64bit
+- CPU: x86-64
+- Memory: larger than 64GB RAM
+- Storage: larger than 64GB
+- Softwares :Python3, Selenium Library, Chrome, Firefox
