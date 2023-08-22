@@ -118,6 +118,7 @@ class Browser:
                     if self.__vid: options.append(f'--display={self.__vid}')
                     option = webdriver.firefox.options.Options()
                     fb = FirefoxBinary()
+                    fb.ensure_firefox_binaries(browser_dir, self.version)
                     if not fb.firefox_binary_exist(browser_dir, self.version):
                         print ('No firefox binaries...', self.version) 
                         sys.exit(1)
