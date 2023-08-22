@@ -15,21 +15,50 @@ An automatic tool that finds render-update bugs in the browser.
 - After extracting the "source code.zip", run the bash file `setup.sh` to install all of the dependencies.
 
 ```shell
+$ cd ./Metamong
 $ ./setup.sh
 ```
 
 ## Reproduction
 
 ### 6.1 Effectiveness of Render-update Oracle
-- To reproduce the result, please run the commands below.
+- To reproduce the result, please download and extract "6.1.zip" from [link](https://figshare.com/s/05656422846b31f368fc) and run the commands below.
+- For Chrome bugs:
 ```shell
-$ cd ./src/
+$ cd ./Metamong/src
+$ python3 repro.py [path/to/6.1/chrome]  # to reproduce the result of Chrome
+
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1163031/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1167352/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1188753/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1189195r/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1190987/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1205650/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1206914/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1222734/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1283279/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1285883r/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1291930/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1305109/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1311813/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1373252/poc.html
+Oracle detects the bug, poc: ../testenv/6.1/chrome/1402075/poc.html
+bug: 15, num: 15
+```
+
+- For Firefox bugs:
+```shell
+$ cd ./Metamong/src
+$ python3 repro.py [path/to/6.1/firefox] # to reproduce the result of Firefox 
 ```
 
 ### 6.2 Effectiveness of Page Mutator
-- To reproduce the result, please run the commands below.
+- To reproduce the result, please download and extract "6.2.zip" from [link](https://figshare.com/s/05656422846b31f368fc) and run the commands below.
+
 ```shell
-$ TODO
+$ cd ./Metamong/src
+$ ./internal_eval_script.sh chrome [path/to/6.2/100k_inputs] # Test Chrome
+$ ./internal_eval_script.sh firefox [path/to/6.2/100k_inputs] # Test Firefox
 ```
 
 ## Usage
