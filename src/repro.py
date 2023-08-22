@@ -83,7 +83,8 @@ if __name__ == "__main__":
     for directory in sorted(os.listdir(url)):
         path = os.path.join(url, directory)
         if not os.path.isdir(path): continue
+
         num += 1
         if test(path): 
             bug += 1
-    print (f'bug: {bug}, num: {num}')
+    print (f'bug: {bug}, number of testcases: {num}')
